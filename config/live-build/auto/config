@@ -13,7 +13,7 @@ lb config noauto \
     --archive-areas "main restricted universe multiverse" \
     --bootappend-live "boot=casper quiet splash" \
     --debian-installer false \
-    --linux-packages "linux-generic" \
+    --linux-packages "linux" \
     --iso-application "namdevOS" \
     --iso-publisher "namdevOS Project" \
     --iso-volume "namdevOS 1.0" \
