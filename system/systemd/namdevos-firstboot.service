@@ -1,6 +1,6 @@
 [Unit]
 Description=namdevOS First Boot Configuration
-ConditionFirstBoot=yes
+ConditionPathExists=!/var/lib/namdevos/.configured
 After=network-online.target
 Wants=network-online.target
 

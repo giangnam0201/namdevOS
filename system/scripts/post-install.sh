@@ -16,7 +16,7 @@ fi
 
 # Add the primary user to the docker group
 if getent group docker &>/dev/null; then
-    PRIMARY_USER="${SUDO_USER:-$(logname 2>/dev/null || echo '')}"
+    PRIMARY_USER="$(getent passwd 1000 | cut -d: -f1)"
     if [[ -n "$PRIMARY_USER" ]]; then
         usermod -aG docker "$PRIMARY_USER"
         echo "User $PRIMARY_USER added to docker group"
@@ -53,5 +53,10 @@ if systemctl list-unit-files | grep -q "ssh.service"; then
     systemctl enable ssh
     echo "SSH service enabled"
 fi
+
+# Mark first-boot configuration as complete
+mkdir -p /var/lib/namdevos
+touch /var/lib/namdevos/.configured
+echo "First-boot marker created"
 
 echo "Post-installation configuration complete!"
