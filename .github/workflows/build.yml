@@ -62,6 +62,26 @@ jobs:
             isolinux \
             syslinux-utils
 
+      - name: Patch live-build syslinux script
+        run: |
+          SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$')
+          if [ -z "$SCRIPT" ] || [ ! -f "$SCRIPT" ]; then
+            echo "dpkg lookup failed, trying find..."
+            SCRIPT=$(find /usr/lib/live /usr/share/live -name "lb_binary_syslinux" 2>/dev/null | head -1)
+          fi
+          if [ -z "$SCRIPT" ] || [ ! -f "$SCRIPT" ]; then
+            echo "ERROR: lb_binary_syslinux not found"
+            dpkg -L live-build
+            exit 1
+          fi
+          echo "Patching: $SCRIPT"
+          echo "--- lines before ---"
+          grep -n "oneiric\|gfxboot" "$SCRIPT" || echo "(none)"
+          sudo sed -i '/oneiric/d'       "$SCRIPT"
+          sudo sed -i '/gfxboot-theme/d' "$SCRIPT"
+          echo "--- lines after ---"
+          grep -n "oneiric\|gfxboot" "$SCRIPT" || echo "(removed)"
+
       - name: Build ISO
         run: sudo bash build.sh
 
