@@ -8,6 +8,12 @@ set -euo pipefail
 
 echo "Applying namdevOS branding..."
 
+# Verify staged branding files are available
+if [[ ! -d /tmp/branding ]]; then
+    echo "WARNING: /tmp/branding not found, skipping branding application"
+    exit 0
+fi
+
 # Install wallpaper
 mkdir -p /usr/share/backgrounds/namdevos
 if [[ -f /tmp/branding/wallpapers/namdevos-default.svg ]]; then
@@ -27,6 +33,12 @@ mkdir -p /usr/share/plymouth/themes/namdevos-theme
 if [[ -d /tmp/branding/plymouth/namdevos-theme ]]; then
     cp /tmp/branding/plymouth/namdevos-theme/* \
         /usr/share/plymouth/themes/namdevos-theme/
+
+    # Convert SVG logo to PNG for Plymouth if rsvg-convert is available
+    if command -v rsvg-convert &>/dev/null && [[ -f /tmp/branding/logo/namdevos-logo.svg ]]; then
+        rsvg-convert -w 128 -h 128 /tmp/branding/logo/namdevos-logo.svg \
+            -o /usr/share/plymouth/themes/namdevos-theme/namdevos-logo.png 2>/dev/null || true
+    fi
 fi
 
 # Configure Plymouth

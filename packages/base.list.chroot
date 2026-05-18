@@ -5,3 +5,6 @@ ubuntu-minimal
 ubuntu-standard
 linux-generic
 linux-headers-generic
+librsvg2-bin
+plymouth
+plymouth-themes

@@ -8,6 +8,12 @@ set -euo pipefail
 
 echo "Configuring desktop environment..."
 
+# Verify staged branding files are available
+if [[ ! -d /tmp/branding/xfce ]]; then
+    echo "WARNING: /tmp/branding/xfce not found, skipping desktop configuration"
+    exit 0
+fi
+
 # Create XFCE config directories in skel
 mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
 mkdir -p /etc/skel/.config/xfce4/panel

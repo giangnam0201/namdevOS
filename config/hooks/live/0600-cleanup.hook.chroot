@@ -16,6 +16,9 @@ apt-get autoremove -y --purge
 rm -rf /var/lib/apt/lists/*
 
 # Remove temporary files
+# NOTE: Hooks 0300-0500 have already consumed files from /tmp/branding/ and
+# /tmp/system/ by this point (hooks run in numeric order). This cleanup is safe
+# because all staging data has been copied to its final destination.
 rm -rf /tmp/*
 rm -rf /var/tmp/*
 

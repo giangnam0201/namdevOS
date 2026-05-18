@@ -131,6 +131,26 @@ setup_hooks() {
     log_success "Build hooks configured"
 }
 
+setup_includes() {
+    log_info "Staging branding, system, and installer files into chroot..."
+
+    local includes="${BUILD_DIR}/config/includes.chroot"
+
+    # Stage branding files where hooks expect them (/tmp/branding/)
+    mkdir -p "${includes}/tmp/branding"
+    cp -r branding/* "${includes}/tmp/branding/"
+
+    # Stage system files where hooks expect them (/tmp/system/)
+    mkdir -p "${includes}/tmp/system"
+    cp -r system/* "${includes}/tmp/system/"
+
+    # Stage Calamares configs directly to /etc/calamares/
+    mkdir -p "${includes}/etc/calamares"
+    cp -r installer/calamares/* "${includes}/etc/calamares/"
+
+    log_success "Includes staged into chroot"
+}
+
 run_build() {
     log_info "Starting ISO build..."
     log_info "This may take a long time depending on your internet connection and hardware."
@@ -274,6 +294,7 @@ install_dependencies
 setup_build_directory
 setup_package_lists
 setup_hooks
+setup_includes
 run_build
 
 echo ""

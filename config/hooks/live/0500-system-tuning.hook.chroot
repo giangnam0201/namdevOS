@@ -8,6 +8,12 @@ set -euo pipefail
 
 echo "Applying system tuning..."
 
+# Verify staged system files are available
+if [[ ! -d /tmp/system ]]; then
+    echo "WARNING: /tmp/system not found, skipping system tuning"
+    exit 0
+fi
+
 # Install sysctl performance settings
 mkdir -p /etc/sysctl.d
 if [[ -f /tmp/system/sysctl/99-namdevos-performance.conf ]]; then
@@ -20,6 +26,15 @@ mkdir -p /usr/local/bin
 if [[ -f /tmp/system/scripts/post-install.sh ]]; then
     cp /tmp/system/scripts/post-install.sh /usr/local/bin/namdevos-post-install.sh
     chmod +x /usr/local/bin/namdevos-post-install.sh
+fi
+
+# Install first-boot systemd service to invoke post-install script
+mkdir -p /etc/systemd/system
+if [[ -f /tmp/system/systemd/namdevos-firstboot.service ]]; then
+    cp /tmp/system/systemd/namdevos-firstboot.service \
+        /etc/systemd/system/namdevos-firstboot.service
+    ln -sf /etc/systemd/system/namdevos-firstboot.service \
+        /etc/systemd/system/multi-user.target.wants/namdevos-firstboot.service 2>/dev/null || true
 fi
 
 # Install GRUB customization
