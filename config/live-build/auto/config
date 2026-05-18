@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# live-build auto/config script for namdevOS
+#
+
+set -e
+
+lb config noauto \
+    --binary-images iso-hybrid \
+    --mode ubuntu \
+    --architectures amd64 \
+    --distribution noble \
+    --archive-areas "main restricted universe multiverse" \
+    --bootappend-live "boot=casper quiet splash" \
+    --debian-installer false \
+    --linux-packages "linux-generic" \
+    --iso-application "namdevOS" \
+    --iso-publisher "namdevOS Project" \
+    --iso-volume "namdevOS 1.0" \
+    "${@}"

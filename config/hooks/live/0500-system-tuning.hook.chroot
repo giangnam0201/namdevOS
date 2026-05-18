@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# Apply system tuning and performance configurations
+# Installs sysctl settings and system-level configurations
+#
+
+set -euo pipefail
+
+echo "Applying system tuning..."
+
+# Install sysctl performance settings
+mkdir -p /etc/sysctl.d
+if [[ -f /tmp/system/sysctl/99-namdevos-performance.conf ]]; then
+    cp /tmp/system/sysctl/99-namdevos-performance.conf \
+        /etc/sysctl.d/99-namdevos-performance.conf
+fi
+
+# Install post-install script
+mkdir -p /usr/local/bin
+if [[ -f /tmp/system/scripts/post-install.sh ]]; then
+    cp /tmp/system/scripts/post-install.sh /usr/local/bin/namdevos-post-install.sh
+    chmod +x /usr/local/bin/namdevos-post-install.sh
+fi
+
+# Install GRUB customization
+mkdir -p /etc/default/grub.d
+if [[ -f /tmp/system/grub/namdevos-grub.cfg ]]; then
+    cp /tmp/system/grub/namdevos-grub.cfg /etc/default/grub.d/99-namdevos.cfg
+fi
+
+# Set system-wide environment variables for developers
+cat > /etc/profile.d/namdevos.sh << 'ENVEOF'
+# namdevOS environment defaults
+export EDITOR=vim
+export VISUAL=vim
+export PAGER=less
+ENVEOF
+
+echo "System tuning applied"

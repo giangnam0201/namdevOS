@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# Apply namdevOS branding to system locations
+# Copies wallpapers, logos, Plymouth theme, and LightDM config
+#
+
+set -euo pipefail
+
+echo "Applying namdevOS branding..."
+
+# Install wallpaper
+mkdir -p /usr/share/backgrounds/namdevos
+if [[ -f /tmp/branding/wallpapers/namdevos-default.svg ]]; then
+    cp /tmp/branding/wallpapers/namdevos-default.svg \
+        /usr/share/backgrounds/namdevos/namdevos-default.svg
+fi
+
+# Install logo
+mkdir -p /usr/share/icons/namdevos
+if [[ -f /tmp/branding/logo/namdevos-logo.svg ]]; then
+    cp /tmp/branding/logo/namdevos-logo.svg \
+        /usr/share/icons/namdevos/namdevos-logo.svg
+fi
+
+# Install Plymouth theme
+mkdir -p /usr/share/plymouth/themes/namdevos-theme
+if [[ -d /tmp/branding/plymouth/namdevos-theme ]]; then
+    cp /tmp/branding/plymouth/namdevos-theme/* \
+        /usr/share/plymouth/themes/namdevos-theme/
+fi
+
+# Configure Plymouth
+if command -v update-alternatives &>/dev/null; then
+    update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth \
+        /usr/share/plymouth/themes/namdevos-theme/namdevos-theme.plymouth 200 2>/dev/null || true
+fi
+
+# Install LightDM greeter configuration
+if [[ -f /tmp/branding/lightdm/lightdm-gtk-greeter.conf ]]; then
+    mkdir -p /etc/lightdm
+    cp /tmp/branding/lightdm/lightdm-gtk-greeter.conf \
+        /etc/lightdm/lightdm-gtk-greeter.conf
+fi
+
+echo "Branding applied successfully"

@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# live-build auto/clean script for namdevOS
+#
+
+set -e
+
+lb clean noauto "${@}"
+
+# Remove additional build artifacts
+rm -f build.log

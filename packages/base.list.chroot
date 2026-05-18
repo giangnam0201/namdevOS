@@ -1,0 +1,7 @@
+# namdevOS Base System Packages
+# Core system components required for a functional Ubuntu installation
+
+ubuntu-minimal
+ubuntu-standard
+linux-generic
+linux-headers-generic

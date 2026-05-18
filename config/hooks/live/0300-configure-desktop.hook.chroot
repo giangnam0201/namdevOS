@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# Configure XFCE desktop environment defaults
+# Applies panel layout and desktop settings to /etc/skel for new users
+#
+
+set -euo pipefail
+
+echo "Configuring desktop environment..."
+
+# Create XFCE config directories in skel
+mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
+mkdir -p /etc/skel/.config/xfce4/panel
+mkdir -p /etc/skel/.config/xfce4/whiskermenu
+
+# Copy XFCE panel configuration
+if [[ -f /tmp/branding/xfce/xfce4-panel.xml ]]; then
+    cp /tmp/branding/xfce/xfce4-panel.xml \
+        /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+fi
+
+# Copy desktop configuration
+if [[ -f /tmp/branding/xfce/xfce4-desktop.xml ]]; then
+    cp /tmp/branding/xfce/xfce4-desktop.xml \
+        /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+fi
+
+# Copy Whisker Menu configuration
+if [[ -f /tmp/branding/xfce/whiskermenu.rc ]]; then
+    cp /tmp/branding/xfce/whiskermenu.rc \
+        /etc/skel/.config/xfce4/whiskermenu/defaults.rc
+fi
+
+# Set XFCE as default session
+if [[ -d /usr/share/xsessions ]]; then
+    update-alternatives --set x-session-manager /usr/bin/xfce4-session 2>/dev/null || true
+fi
+
+echo "Desktop environment configured"

@@ -1,0 +1,18 @@
+# namdevOS Desktop Environment Packages
+# XFCE desktop with display manager and essential desktop applications
+
+xfce4
+xfce4-goodies
+lightdm
+lightdm-gtk-greeter
+xfce4-terminal
+thunar
+ristretto
+mousepad
+xfce4-screenshooter
+xfce4-taskmanager
+network-manager
+network-manager-gnome
+pulseaudio
+pavucontrol
+blueman

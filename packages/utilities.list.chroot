@@ -1,0 +1,14 @@
+# namdevOS System Utilities
+# Disk management, backup, package management, and productivity tools
+
+gparted
+timeshift
+synaptic
+software-properties-common
+apt-transport-https
+flatpak
+gnome-software-plugin-flatpak
+file-roller
+evince
+libreoffice
+thunderbird

@@ -1,0 +1,72 @@
+name: namdevOS Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-${{ runner.os }}-${{ hashFiles('packages/*.list.chroot') }}
+          restore-keys: |
+            apt-${{ runner.os }}-
+
+      - name: Install validation dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shellcheck python3-yaml
+
+      - name: Run validation
+        run: bash scripts/validate.sh
+
+  build:
+    name: Build ISO
+    runs-on: ubuntu-latest
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-build-${{ runner.os }}-${{ hashFiles('packages/*.list.chroot') }}
+          restore-keys: |
+            apt-build-${{ runner.os }}-
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            live-build \
+            debootstrap \
+            squashfs-tools \
+            xorriso \
+            isolinux \
+            syslinux-utils
+
+      - name: Build ISO
+        run: sudo bash build.sh
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: namdevos-iso
+          path: output/*.iso
+          retention-days: 7

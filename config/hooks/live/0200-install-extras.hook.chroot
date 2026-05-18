@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Install packages from added repositories
+# These packages require the repos added in 0100-add-repos.hook.chroot
+#
+
+set -euo pipefail
+
+echo "Installing packages from external repositories..."
+
+# Install VS Code
+apt-get install -y --no-install-recommends code
+
+# Install Flatpak and add Flathub
+apt-get install -y --no-install-recommends flatpak
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
+
+echo "Extra packages installed successfully"

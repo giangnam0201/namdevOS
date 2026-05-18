@@ -1,0 +1,47 @@
+# namdevOS Build Environment
+# Provides a reproducible build environment with all dependencies pre-installed
+
+FROM ubuntu:24.04
+
+LABEL maintainer="namdevOS Project"
+LABEL description="Build environment for namdevOS ISO generation"
+
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        live-build \
+        debootstrap \
+        squashfs-tools \
+        xorriso \
+        isolinux \
+        syslinux-utils \
+        apt-utils \
+        ca-certificates \
+        curl \
+        git \
+        make \
+        shellcheck \
+        python3 \
+        python3-yaml \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /build
+
+# Copy project files
+COPY . /build/
+
+# Make scripts executable
+RUN find /build -name "*.sh" -exec chmod +x {} \; && \
+    chmod +x /build/config/live-build/auto/* && \
+    chmod +x /build/config/hooks/live/*.hook.chroot
+
+# Output directory for the ISO
+VOLUME ["/output"]
+
+# Default command: build the ISO and copy to output
+CMD ["bash", "-c", "bash build.sh && cp output/*.iso /output/ 2>/dev/null || echo 'Build complete'"]

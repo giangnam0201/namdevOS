@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# live-build auto/build script for namdevOS
+#
+
+set -e
+
+lb build noauto "${@}" 2>&1 | tee build.log

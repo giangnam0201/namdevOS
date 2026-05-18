@@ -1,0 +1,67 @@
+# namdevOS Plymouth Boot Animation Script
+# Simple spinner/progress bar with logo
+
+# Background color
+Window.SetBackgroundTopColor(0.10, 0.10, 0.18);
+Window.SetBackgroundBottomColor(0.06, 0.13, 0.25);
+
+# Logo image
+logo_image = Image("namdevos-logo.png");
+logo_sprite = Sprite(logo_image);
+logo_sprite.SetX(Window.GetWidth() / 2 - logo_image.GetWidth() / 2);
+logo_sprite.SetY(Window.GetHeight() / 2 - logo_image.GetHeight() / 2 - 50);
+
+# Progress bar configuration
+progress_bar_width = 300;
+progress_bar_height = 4;
+
+# Create progress bar background
+progress_bg = Image(progress_bar_width, progress_bar_height);
+for (x = 0; x < progress_bar_width; x++) {
+    for (y = 0; y < progress_bar_height; y++) {
+        progress_bg.SetPixel(x, y, 0.2, 0.2, 0.3, 1.0);
+    }
+}
+progress_bg_sprite = Sprite(progress_bg);
+progress_bg_sprite.SetX(Window.GetWidth() / 2 - progress_bar_width / 2);
+progress_bg_sprite.SetY(Window.GetHeight() / 2 + 80);
+
+# Progress bar fill
+progress_fill = Image(progress_bar_width, progress_bar_height);
+progress_fill_sprite = Sprite(progress_fill);
+progress_fill_sprite.SetX(Window.GetWidth() / 2 - progress_bar_width / 2);
+progress_fill_sprite.SetY(Window.GetHeight() / 2 + 80);
+
+# Spinner animation
+spinner_angle = 0;
+
+fun refresh_callback() {
+    spinner_angle += 5;
+    if (spinner_angle >= 360) {
+        spinner_angle = 0;
+    }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+# Boot progress callback
+fun boot_progress_callback(duration, progress) {
+    fill_width = Math.Int(progress_bar_width * progress);
+
+    new_fill = Image(fill_width, progress_bar_height);
+    for (x = 0; x < fill_width; x++) {
+        for (y = 0; y < progress_bar_height; y++) {
+            new_fill.SetPixel(x, y, 0.91, 0.27, 0.38, 1.0);
+        }
+    }
+    progress_fill_sprite.SetImage(new_fill);
+}
+
+Plymouth.SetBootProgressFunction(boot_progress_callback);
+
+# Message callback
+fun message_callback(text) {
+    # Display status messages below progress bar
+}
+
+Plymouth.SetMessageFunction(message_callback);
