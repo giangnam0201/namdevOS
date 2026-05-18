@@ -63,25 +63,6 @@ check_root() {
     fi
 }
 
-patch_live_build() {
-    log_info "Patching live-build for Ubuntu Noble compatibility..."
-
-    # Ubuntu mode in live-build tries to install syslinux-themes-ubuntu-oneiric
-    # and gfxboot-theme-ubuntu, packages that were removed from Ubuntu repos after
-    # Ubuntu 11.10 (Oneiric). Strip those two lines so the syslinux stage
-    # proceeds with default theming instead of aborting the entire build.
-    local syslinux_script
-    syslinux_script=$(find /usr/lib/live/build /usr/share/live/build 2>/dev/null \
-                      -name "lb_binary_syslinux" | head -1)
-
-    if [[ -n "$syslinux_script" ]]; then
-        sed -i '/syslinux-themes-ubuntu\|gfxboot-theme-ubuntu/d' "$syslinux_script"
-        log_success "live-build patched"
-    else
-        log_warn "lb_binary_syslinux not found, skipping patch"
-    fi
-}
-
 install_dependencies() {
     local deps=(live-build debootstrap squashfs-tools xorriso isolinux syslinux-utils)
     local missing=()
@@ -310,7 +291,6 @@ if [[ "$CLEAN" == "true" ]]; then
 fi
 
 install_dependencies
-patch_live_build
 setup_build_directory
 setup_package_lists
 setup_hooks

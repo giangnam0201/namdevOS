@@ -5,14 +5,23 @@
 
 set -e
 
+# Note: --mode ubuntu is intentionally omitted. Ubuntu mode enables a syslinux
+# code path that tries to install syslinux-themes-ubuntu-oneiric, a package
+# dropped from Ubuntu repos after 11.10. Debian mode has no such block.
+# Ubuntu's package archive is used by setting the mirror options explicitly.
 lb config noauto \
     --binary-images iso-hybrid \
-    --mode ubuntu \
     --architectures amd64 \
     --distribution noble \
     --archive-areas "main restricted universe multiverse" \
+    --mirror-bootstrap "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-chroot "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-chroot-security "http://security.ubuntu.com/ubuntu/" \
+    --mirror-binary "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-binary-security "http://security.ubuntu.com/ubuntu/" \
     --bootappend-live "boot=casper quiet splash" \
     --debian-installer false \
+    --linux-flavours "generic" \
     --linux-packages "linux" \
     --iso-application "namdevOS" \
     --iso-publisher "namdevOS Project" \
