@@ -12,6 +12,7 @@ lb config noauto \
     --distribution noble \
     --archive-areas "main restricted universe multiverse" \
     --bootappend-live "boot=casper quiet splash" \
+    --bootloaders grub-efi \
     --debian-installer false \
     --linux-packages "linux" \
     --iso-application "namdevOS" \
