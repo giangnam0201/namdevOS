@@ -63,33 +63,8 @@ check_root() {
     fi
 }
 
-patch_live_build() {
-    log_info "Patching lb_binary_syslinux for Ubuntu Noble compatibility..."
-
-    # The Ubuntu-patched live-build tries to install syslinux-themes-ubuntu-oneiric
-    # and gfxboot-theme-ubuntu regardless of --mode, detecting Ubuntu via the mirror
-    # URL. Both packages were dropped from Ubuntu repos after 11.10. Remove the
-    # offending lines so the syslinux stage proceeds with default (unstyled) menus.
-    local script
-    # dpkg -L gives the exact installed path - no guessing with find
-    script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$')
-    if [[ -z "$script" || ! -f "$script" ]]; then
-        log_warn "lb_binary_syslinux not found via dpkg; trying find..."
-        script=$(find /usr/lib/live /usr/share/live 2>/dev/null -name "lb_binary_syslinux" | head -1)
-    fi
-    if [[ -z "$script" || ! -f "$script" ]]; then
-        log_warn "lb_binary_syslinux not found - skipping patch"
-        return
-    fi
-
-    log_info "Found: $script"
-    sed -i '/oneiric/d'        "$script"
-    sed -i '/gfxboot-theme/d'  "$script"
-    log_success "lb_binary_syslinux patched"
-}
-
 install_dependencies() {
-    local deps=(live-build debootstrap squashfs-tools xorriso isolinux syslinux-utils)
+    local deps=(live-build debootstrap squashfs-tools xorriso grub-efi-amd64 grub-efi-amd64-signed shim-signed)
     local missing=()
 
     for dep in "${deps[@]}"; do
@@ -316,7 +291,6 @@ if [[ "$CLEAN" == "true" ]]; then
 fi
 
 install_dependencies
-patch_live_build
 setup_build_directory
 setup_package_lists
 setup_hooks
