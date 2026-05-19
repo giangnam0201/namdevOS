@@ -63,17 +63,6 @@ jobs:
             grub-efi-amd64-signed \
             shim-signed
 
-      - name: Stub lb_binary_syslinux
-        run: |
-          SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
-          [ -z "$SCRIPT" ] && SCRIPT=$(find /usr/lib/live /usr/share/live -name "lb_binary_syslinux" 2>/dev/null | head -1)
-          if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
-            printf '#!/bin/bash\nexit 0\n' | sudo tee "$SCRIPT" > /dev/null
-            echo "Stubbed $SCRIPT"
-          else
-            echo "lb_binary_syslinux not found, skipping"
-          fi
-
       - name: Build ISO
         run: sudo bash build.sh
 
