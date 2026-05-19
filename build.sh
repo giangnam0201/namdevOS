@@ -74,24 +74,13 @@ patch_syslinux() {
         log_warn "lb_binary_syslinux not found — skipping gfxboot patch"
     fi
 
-    # syslinux-themes-ubuntu-oneiric is assembled from a config variable at
-    # runtime, not a literal in the script; pre-install a dummy deb so apt-get
-    # sees the package as already satisfied and skips the network fetch.
-    if dpkg -l syslinux-themes-ubuntu-oneiric &>/dev/null 2>&1; then
-        log_success "syslinux-themes-ubuntu-oneiric already satisfied"
-    else
-        local pkgdir debdir
-        pkgdir=$(mktemp -d)
-        debdir=$(mktemp -d)
-        mkdir -p "${pkgdir}/DEBIAN"
-        printf 'Package: syslinux-themes-ubuntu-oneiric\nVersion: 99.0\nArchitecture: all\nMaintainer: CI <ci@localhost>\nDescription: Dummy package to satisfy live-build\n' \
-            > "${pkgdir}/DEBIAN/control"
-        dpkg-deb --build "${pkgdir}" "${debdir}/syslinux-themes-ubuntu-oneiric_99.0_all.deb"
-        dpkg -i "${debdir}/syslinux-themes-ubuntu-oneiric_99.0_all.deb"
-        rm -rf "${pkgdir}" "${debdir}"
-        log_success "dummy syslinux-themes-ubuntu-oneiric installed"
-    fi
-    mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric
+    # The install call contains the literal text "syslinux-themes-" followed by
+    # a variable, so match the prefix. gfxboot-theme-ubuntu is also literal.
+    sed -i \
+        -e 's/.*syslinux-themes-.*/true/' \
+        -e 's/.*gfxboot-theme-ubuntu.*/true/' \
+        "$script"
+    log_success "lb_binary_syslinux patched (themes)"
 }
 
 install_dependencies() {

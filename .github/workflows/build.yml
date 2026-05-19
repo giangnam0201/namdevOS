@@ -67,27 +67,24 @@ jobs:
 
       - name: Patch lb_binary_syslinux
         run: |
-          # gfxboot-theme-ubuntu appears literally in the script — sed handles it
+          # The install call in lb_binary_syslinux looks like:
+          #   Packages_Install "syslinux-themes-${LB_SYSLINUX_THEME}"
+          # LB_SYSLINUX_THEME is set from the live-build config file before the
+          # script body runs, so we cannot intercept the variable assignment.
+          # However the literal text "syslinux-themes-" IS in the script, so we
+          # match that. gfxboot-theme-ubuntu also appears literally.
           SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
           [ -z "$SCRIPT" ] && SCRIPT=$(find /usr/lib/live /usr/share/live -name lb_binary_syslinux 2>/dev/null | head -1)
           if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
-            sudo sed -i 's/.*gfxboot-theme-ubuntu.*/true/' "$SCRIPT"
-            echo "Patched gfxboot in: $SCRIPT"
+            sudo sed -i \
+              -e 's/.*syslinux-themes-.*/true/' \
+              -e 's/.*gfxboot-theme-ubuntu.*/true/' \
+              "$SCRIPT"
+            echo "Patched: $SCRIPT"
+            grep -n 'syslinux-themes-\|gfxboot-theme' "$SCRIPT" || echo "(no dead theme lines remaining)"
           else
-            echo "lb_binary_syslinux not found — skipping gfxboot patch"
+            echo "lb_binary_syslinux not found — skipping patch"
           fi
-
-          # syslinux-themes-ubuntu-oneiric is built from a config variable, not a
-          # literal string in the script, so sed cannot intercept it. Pre-install a
-          # dummy package so apt-get sees it as already satisfied.
-          mkdir -p /tmp/faketheme/DEBIAN
-          printf 'Package: syslinux-themes-ubuntu-oneiric\nVersion: 99.0\nArchitecture: all\nMaintainer: CI <ci@localhost>\nDescription: Dummy package to satisfy live-build\n' \
-            > /tmp/faketheme/DEBIAN/control
-          dpkg-deb --build /tmp/faketheme /tmp/syslinux-themes-ubuntu-oneiric_99.0_all.deb
-          sudo dpkg -i /tmp/syslinux-themes-ubuntu-oneiric_99.0_all.deb
-          # create empty theme dir so any subsequent cp of theme files is a no-op
-          sudo mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric
-          echo "Installed dummy syslinux-themes-ubuntu-oneiric"
 
       - name: Build ISO
         run: sudo bash build.sh
