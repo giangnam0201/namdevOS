@@ -100,7 +100,37 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$TAG" release/*.iso \
-            --repo "${{ github.repository }}" \
-            --title "namdevOS $TAG" \
-            --generate-notes
+          # Split ISO if larger than 2GB (GitHub release asset limit)
+          ISO_FILE=$(find release/ -name "*.iso" | head -1)
+          ISO_SIZE=$(stat --format=%s "$ISO_FILE")
+          MAX_SIZE=2000000000
+
+          if [ "$ISO_SIZE" -gt "$MAX_SIZE" ]; then
+            echo "ISO is ${ISO_SIZE} bytes (>2GB), splitting for upload..."
+            split -b 1900m "$ISO_FILE" "release/namdevOS-${TAG}-part-"
+            rm "$ISO_FILE"
+            # Create a readme for reassembly
+            echo "# namdevOS ${TAG}" > release/REASSEMBLE.md
+            echo "" >> release/REASSEMBLE.md
+            echo "The ISO was split into parts due to GitHub's 2GB file size limit." >> release/REASSEMBLE.md
+            echo "" >> release/REASSEMBLE.md
+            echo "## Reassemble on Linux/macOS:" >> release/REASSEMBLE.md
+            echo '```' >> release/REASSEMBLE.md
+            echo "cat namdevOS-${TAG}-part-* > namdevOS-${TAG}.iso" >> release/REASSEMBLE.md
+            echo '```' >> release/REASSEMBLE.md
+            echo "" >> release/REASSEMBLE.md
+            echo "## Reassemble on Windows (PowerShell):" >> release/REASSEMBLE.md
+            echo '```' >> release/REASSEMBLE.md
+            echo "Get-Content namdevOS-${TAG}-part-* -ReadCount 0 -Encoding Byte | Set-Content namdevOS-${TAG}.iso -Encoding Byte" >> release/REASSEMBLE.md
+            echo '```' >> release/REASSEMBLE.md
+
+            gh release create "$TAG" release/* \
+              --repo "${{ github.repository }}" \
+              --title "namdevOS $TAG" \
+              --generate-notes
+          else
+            gh release create "$TAG" "$ISO_FILE" \
+              --repo "${{ github.repository }}" \
+              --title "namdevOS $TAG" \
+              --generate-notes
+          fi
