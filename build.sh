@@ -408,6 +408,35 @@ setup_build_directory
 setup_package_lists
 setup_hooks
 setup_includes
+
+# Ensure isohybrid is in PATH (live-build's scripts use /bin/sh with limited PATH)
+if ! command -v isohybrid &>/dev/null; then
+    # Try to find it
+    for p in /usr/bin/isohybrid /usr/sbin/isohybrid /usr/lib/syslinux/isohybrid; do
+        if [[ -f "$p" ]]; then
+            ln -sf "$p" /usr/local/bin/isohybrid
+            break
+        fi
+    done
+fi
+# If still not found, create a wrapper using xorriso (modern alternative)
+if ! command -v isohybrid &>/dev/null; then
+    log_warn "isohybrid not found, creating xorriso-based wrapper"
+    cat > /usr/local/bin/isohybrid << 'HYBRIDWRAPPER'
+#!/bin/sh
+# Wrapper: isohybrid using xorriso as backend
+# Usage: isohybrid <iso-file>
+ISO="$1"
+if [ -z "$ISO" ]; then
+    echo "Usage: isohybrid <iso-file>" >&2
+    exit 1
+fi
+# xorriso can make an ISO hybrid in-place
+xorriso -dev "$ISO" -boot_image any partition_table=on -append_partition 2 0xef --interval:appended_partition_2:all:: 2>/dev/null || true
+HYBRIDWRAPPER
+    chmod +x /usr/local/bin/isohybrid
+fi
+
 run_build
 
 echo ""
