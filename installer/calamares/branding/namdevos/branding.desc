@@ -4,23 +4,21 @@ componentName: namdevos
 strings:
     productName:         "namdevOS"
     shortProductName:    "namdevOS"
-    version:             "1.1"
-    shortVersion:        "1.1"
-    versionedName:       "namdevOS 1.1 Nova"
-    shortVersionedName:  "namdevOS 1.1"
+    version:             "1.2"
+    shortVersion:        "1.2"
+    versionedName:       "namdevOS 1.2"
+    shortVersionedName:  "namdevOS 1.2"
     bootloaderEntryName: "namdevOS"
-    productUrl:          "https://github.com/namdevOS/namdevOS"
-    supportUrl:          "https://github.com/namdevOS/namdevOS/issues"
-    knownIssuesUrl:      "https://github.com/namdevOS/namdevOS/issues"
-    releaseNotesUrl:     "https://github.com/namdevOS/namdevOS/releases"
+    productUrl:          "https://github.com/giangnam0201/namdevOS"
+    supportUrl:          "https://github.com/giangnam0201/namdevOS/issues"
+    knownIssuesUrl:      "https://github.com/giangnam0201/namdevOS/issues"
+    releaseNotesUrl:     "https://github.com/giangnam0201/namdevOS/releases"
 
 images:
     productLogo:         "namdevos-logo.svg"
     productIcon:         "namdevos-logo.svg"
-    productWelcome:      "welcome.svg"
 
 slideshow:               "show.qml"
-
 slideshowAPI: 2
 
 style:

@@ -8,7 +8,7 @@ set -euo pipefail
 
 # Configuration
 DISTRO_NAME="namdevOS"
-DISTRO_VERSION="1.1"
+DISTRO_VERSION="1.2"
 BUILD_DIR="build"
 CONFIG_DIR="config/live-build"
 PACKAGES_DIR="packages"

@@ -208,7 +208,23 @@ echo "[6/7] Setting hostname..."
 echo "namdevOS" > /etc/hostname
 sed -i 's/127\.0\.1\.1.*/127.0.1.1\tnamdevOS/' /etc/hosts 2>/dev/null || true
 
-echo "[7/7] Fixing os-release..."
+echo "[7/8] Fixing Calamares unpackfs source path..."
+# Calamares needs to find filesystem.squashfs - create config if missing
+mkdir -p /etc/calamares/modules
+cat > /etc/calamares/modules/unpackfs.conf << 'UNPACK'
+unpack:
+    - source: "/cdrom/casper/filesystem.squashfs"
+      sourcefs: "squashfs"
+      destination: ""
+UNPACK
+# Also create symlink in case it looks at /run/live/medium
+SQFS="$(find /cdrom /run/live /media -name 'filesystem.squashfs' 2>/dev/null | head -1)"
+if [[ -n "$SQFS" ]]; then
+    mkdir -p /run/live/medium/live
+    ln -sf "$SQFS" /run/live/medium/live/filesystem.squashfs 2>/dev/null || true
+fi
+
+echo "[8/8] Fixing os-release..."
 cat > /etc/os-release << 'OSREL'
 PRETTY_NAME="namdevOS 1.1 Nova"
 NAME="namdevOS"

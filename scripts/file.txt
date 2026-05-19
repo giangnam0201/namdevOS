@@ -1,0 +1,14 @@
+# Find where the squashfs actually is
+SQFS=$(find /cdrom /run/live /media -name "filesystem.squashfs" 2>/dev/null | head -1)
+echo "Found squashfs at: $SQFS"
+
+# Create the path Calamares expects
+sudo mkdir -p /run/live/medium/live
+sudo ln -sf "$SQFS" /run/live/medium/live/filesystem.squashfs
+
+# Also create symlink at other common paths
+sudo mkdir -p /cdrom/casper
+sudo ln -sf "$SQFS" /cdrom/casper/filesystem.squashfs
+
+# Re-run calamares
+sudo calamares

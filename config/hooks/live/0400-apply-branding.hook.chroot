@@ -54,6 +54,9 @@ if [[ -f /tmp/branding/logo/namdevos-logo.svg ]]; then
     # Also install to pixmaps for broader compatibility
     mkdir -p /usr/share/pixmaps
     cp /tmp/branding/logo/namdevos-logo.svg /usr/share/pixmaps/namdevos-logo.svg
+    # Also copy to calamares branding dir so installer can find it
+    mkdir -p /etc/calamares/branding/namdevos
+    cp /tmp/branding/logo/namdevos-logo.svg /etc/calamares/branding/namdevos/namdevos-logo.svg
 fi
 
 # Install Plymouth theme
