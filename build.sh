@@ -122,9 +122,39 @@ for mod in libutil.c32 libcom32.c32 menu.c32 vesamenu.c32 hdt.c32 chain.c32; do
     done
 done
 
-# Create a basic isolinux.cfg if one doesn't exist
-if [ ! -f binary/isolinux/isolinux.cfg ]; then
-    cat > binary/isolinux/isolinux.cfg << 'ISOCFG'
+# Write isolinux.cfg (always overwrite - we control the boot menu)
+# At this point in the build, kernel files should already exist in binary/
+KERNEL_PATH=""
+INITRD_PATH=""
+
+# Check all possible locations live-build uses
+for kdir in casper live boot; do
+    if [ -d "binary/${kdir}" ]; then
+        for kfile in binary/${kdir}/vmlinuz binary/${kdir}/vmlinuz-*; do
+            if [ -f "$kfile" ]; then
+                KERNEL_PATH="/${kdir}/$(basename "$kfile")"
+                break 2
+            fi
+        done
+    fi
+done
+for idir in casper live boot; do
+    for ifile in binary/${idir}/initrd binary/${idir}/initrd.img binary/${idir}/initrd.img-* binary/${idir}/initrd.lz; do
+        if [ -f "$ifile" ]; then
+            INITRD_PATH="/${idir}/$(basename "$ifile")"
+            break 2
+        fi
+    done
+done
+
+# Fallback defaults
+[ -z "$KERNEL_PATH" ] && KERNEL_PATH="/casper/vmlinuz"
+[ -z "$INITRD_PATH" ] && INITRD_PATH="/casper/initrd"
+
+echo "P: Kernel path: ${KERNEL_PATH}"
+echo "P: Initrd path: ${INITRD_PATH}"
+
+cat > binary/isolinux/isolinux.cfg << ISOCFG
 DEFAULT live
 TIMEOUT 50
 PROMPT 0
@@ -132,7 +162,6 @@ PROMPT 0
 UI menu.c32
 
 MENU TITLE namdevOS Boot Menu
-MENU BACKGROUND #0d1117
 MENU COLOR title  1;36;40 #ff00d2d3 #00000000 none
 MENU COLOR sel    7;37;40 #ffe94560 #00000000 none
 MENU COLOR unsel  37;40   #ffe0e0e0 #00000000 none
@@ -141,15 +170,14 @@ MENU COLOR border 37;40   #00000000 #00000000 none
 LABEL live
     MENU LABEL ^Start namdevOS
     MENU DEFAULT
-    KERNEL /casper/vmlinuz
-    APPEND initrd=/casper/initrd boot=casper quiet splash ---
+    KERNEL ${KERNEL_PATH}
+    APPEND initrd=${INITRD_PATH} boot=casper quiet splash ---
 
 LABEL live-safe
     MENU LABEL Start namdevOS (Safe Mode)
-    KERNEL /casper/vmlinuz
-    APPEND initrd=/casper/initrd boot=casper xforcevesa nomodeset quiet splash ---
+    KERNEL ${KERNEL_PATH}
+    APPEND initrd=${INITRD_PATH} boot=casper xforcevesa nomodeset quiet splash ---
 ISOCFG
-fi
 
 # Create boot.cat marker
 touch binary/isolinux/boot.cat 2>/dev/null || true
