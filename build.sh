@@ -66,48 +66,50 @@ check_root() {
 patch_syslinux() {
     log_info "Patching live-build syslinux theme handling..."
 
-    # Find lb_binary_syslinux - we need it to run (it sets up isolinux boot)
-    # but we must prevent it from trying to copy non-existent theme files.
-    local script
-    script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
-    [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live /usr/lib/live-build 2>/dev/null -name lb_binary_syslinux -type f | head -1)
+    # Run in a subshell with relaxed error handling so find/grep failures
+    # don't kill the main build script (set -euo pipefail is active)
+    (
+        set +e
+        set +o pipefail
 
-    if [[ -n "$script" && -f "$script" ]]; then
-        # Comment out any line that tries to copy theme files
-        # The problematic pattern is: cp -r /usr/share/syslinux/themes/$THEME/isolinux-live/*
-        # Since $LB_SYSLINUX_THEME can be empty, we match any cp line with 'themes' in path
-        sed -i \
-            -e 's|^\(.*cp.*themes.*/isolinux-live\)|# PATCHED: \1|' \
-            -e 's|^\(.*cp -r.*/usr/share/syslinux/themes\)|# PATCHED: \1|' \
-            -e 's|^\(.*Packages_Install.*syslinux-themes\)|# PATCHED: \1|' \
-            -e 's|^\(.*gfxboot-theme\)|# PATCHED: \1|' \
-            "$script"
-        log_success "lb_binary_syslinux patched (theme lines commented out)"
-    else
-        log_warn "lb_binary_syslinux not found — skipping patch"
-    fi
+        # Find lb_binary_syslinux
+        local script=""
+        script="$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$')"
+        if [ -z "$script" ] || [ ! -f "$script" ]; then
+            script="$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name lb_binary_syslinux -type f 2>/dev/null | head -1)"
+        fi
 
-    # Also patch defaults.sh which may set LB_SYSLINUX_THEME
-    local defaults
-    defaults=$(find /usr/lib/live /usr/share/live /usr/lib/live-build 2>/dev/null -name "defaults.sh" -type f | head -1)
-    if [[ -n "$defaults" && -f "$defaults" ]]; then
-        sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|' "$defaults" 2>/dev/null || true
-    fi
+        if [ -n "$script" ] && [ -f "$script" ]; then
+            sed -i \
+                -e 's|^\(.*cp.*themes.*/isolinux-live\)|# PATCHED: \1|' \
+                -e 's|^\(.*cp -r.*/usr/share/syslinux/themes\)|# PATCHED: \1|' \
+                -e 's|^\(.*Packages_Install.*syslinux-themes\)|# PATCHED: \1|' \
+                -e 's|^\(.*gfxboot-theme\)|# PATCHED: \1|' \
+                "$script"
+            echo "[PATCH] lb_binary_syslinux theme lines commented out"
+        fi
 
-    # Create fake theme directories so any remaining cp commands succeed silently
-    mkdir -p /usr/share/syslinux/themes/isolinux-live
-    mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
-    # Put a dummy file so cp -r doesn't fail on empty dir
-    touch /usr/share/syslinux/themes/isolinux-live/.keep
-    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
+        # Patch defaults.sh to clear theme variable
+        local defaults=""
+        defaults="$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name 'defaults.sh' -type f 2>/dev/null | head -1)"
+        if [ -n "$defaults" ] && [ -f "$defaults" ]; then
+            sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|' "$defaults"
+        fi
 
-    # Ensure syslinux-common and isolinux are installed (needed for boot)
-    if ! dpkg -l syslinux-common &>/dev/null 2>&1; then
-        apt-get install -y syslinux-common 2>/dev/null || true
-    fi
-    if ! dpkg -l isolinux &>/dev/null 2>&1; then
-        apt-get install -y isolinux 2>/dev/null || true
-    fi
+        # Create fake theme directories
+        mkdir -p /usr/share/syslinux/themes/isolinux-live
+        mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
+        touch /usr/share/syslinux/themes/isolinux-live/.keep
+        touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
+
+        # Ensure syslinux-common and isolinux are installed
+        dpkg -l syslinux-common >/dev/null 2>&1 || apt-get install -y syslinux-common >/dev/null 2>&1
+        dpkg -l isolinux >/dev/null 2>&1 || apt-get install -y isolinux >/dev/null 2>&1
+
+        exit 0
+    )
+
+    log_success "Syslinux patch applied"
 }
 
 install_dependencies() {
