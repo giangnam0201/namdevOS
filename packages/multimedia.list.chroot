@@ -1,13 +1,5 @@
-# namdevOS Multimedia Packages
-# Media playback, editing, and streaming applications
+# namdevOS Multimedia (Minimal - included in ISO)
+# Only VLC ships by default. Other apps available via post-install selector.
 
 vlc
-gimp
-obs-studio
 ffmpeg
-audacity
-inkscape
-kdenlive
-cheese
-simple-scan
-shotwell

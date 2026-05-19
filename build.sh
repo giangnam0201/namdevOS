@@ -64,46 +64,40 @@ check_root() {
 }
 
 patch_syslinux() {
-    log_info "Patching live-build syslinux theme handling..."
+    log_info "Neutralizing lb_binary_syslinux (using GRUB-EFI, syslinux themes not needed)..."
 
-    # Find all live-build scripts that reference syslinux themes
-    local scripts=()
-    while IFS= read -r -d '' f; do
-        scripts+=("$f")
-    done < <(find /usr/lib/live /usr/share/live /usr/lib/live-build 2>/dev/null -type f -print0)
+    # Find the lb_binary_syslinux script and replace it entirely with a no-op.
+    # The script tries to cp theme files that don't exist in Ubuntu 24.04.
+    # The path uses a variable ($LB_SYSLINUX_THEME) which can be empty,
+    # resulting in paths like /usr/share/syslinux/themes//isolinux-live.
+    local script
+    script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
+    [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live /usr/lib/live-build 2>/dev/null -name lb_binary_syslinux -type f | head -1)
 
-    # Also check the specific known script path
-    local main_script
-    main_script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
-    [[ -n "$main_script" && -f "$main_script" ]] && scripts+=("$main_script")
-
-    local patched=0
-    for script in "${scripts[@]}"; do
-        [[ -f "$script" ]] || continue
-        if grep -qE 'syslinux-themes-|gfxboot-theme|ubuntu-oneiric|isolinux-live' "$script" 2>/dev/null; then
-            sed -i \
-                -e '/syslinux-themes-/s/^/# PATCHED: /' \
-                -e '/gfxboot-theme-ubuntu/s/^/# PATCHED: /' \
-                -e '/ubuntu-oneiric/s/^/# PATCHED: /' \
-                -e 's|cp.*syslinux/themes.*|true  # PATCHED: theme copy disabled|g' \
-                -e 's|cp.*isolinux-live.*|true  # PATCHED: theme copy disabled|g' \
-                "$script"
-            patched=$((patched + 1))
-        fi
-    done
-
-    # Create a fake theme directory so any remaining cp commands won't fail
-    mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
-    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.placeholder
-
-    if [[ $patched -gt 0 ]]; then
-        log_success "Patched ${patched} live-build script(s) for syslinux themes"
+    if [[ -n "$script" && -f "$script" ]]; then
+        # Backup original
+        cp "$script" "${script}.orig"
+        # Replace with a script that just exits successfully
+        cat > "$script" << 'NOOP'
+#!/bin/sh
+# PATCHED by namdevOS: syslinux theme handling disabled (GRUB-EFI only)
+exit 0
+NOOP
+        chmod +x "$script"
+        log_success "lb_binary_syslinux replaced with no-op"
     else
-        log_warn "No syslinux theme references found to patch (may already be clean)"
+        log_warn "lb_binary_syslinux not found — skipping"
     fi
 
-    # Also ensure the syslinux theme package issue won't block the build
-    # by creating a dummy package status if needed
+    # Also create fake directories as a belt-and-suspenders approach
+    # in case any other script references these paths
+    mkdir -p /usr/share/syslinux/themes/isolinux-live
+    mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
+    # Create a minimal isolinux.cfg so nothing complains
+    touch /usr/share/syslinux/themes/isolinux-live/isolinux.cfg
+    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/isolinux.cfg
+
+    # Ensure syslinux-common is installed
     if ! dpkg -l syslinux-common &>/dev/null 2>&1; then
         apt-get install -y syslinux-common 2>/dev/null || true
     fi

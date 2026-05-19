@@ -1,43 +1,27 @@
-# namdevOS System Utilities
-# Disk management, backup, package management, and productivity tools
+# namdevOS System Utilities (Minimal - included in ISO)
+# Core system tools only. Office/productivity available via post-install selector.
 
-# Disk and partition management
+# Disk management
 gparted
-gnome-disk-utility
-
-# Backup
-timeshift
 
 # Package management
-synaptic
 software-properties-common
 apt-transport-https
 flatpak
-gnome-software-plugin-flatpak
 
 # Archive tools
 file-roller
 p7zip-full
-unrar
 
 # Document viewer
 evince
 
-# Office suite
-libreoffice
-
-# Email client
-thunderbird
-
 # System tools
 gnome-system-monitor
-baobab
-dconf-editor
 
 # Security
 ufw
 gufw
-keepassxc
 
 # Printing
 cups

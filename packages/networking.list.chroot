@@ -1,26 +1,6 @@
-# namdevOS Networking Packages
-# Network connectivity, VPN, and communication tools
+# namdevOS Networking (Minimal - included in ISO)
+# Basic connectivity. VPN/remote tools available via post-install selector.
 
-# WiFi and Bluetooth
 wireless-tools
 wpasupplicant
 rfkill
-
-# VPN support
-openvpn
-wireguard
-network-manager-openvpn
-network-manager-openvpn-gnome
-
-# Remote access
-remmina
-remmina-plugin-rdp
-remmina-plugin-vnc
-
-# File sharing
-samba
-smbclient
-
-# Download tools
-aria2
-transmission-gtk

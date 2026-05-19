@@ -1,28 +1,44 @@
 # namdevOS Desktop Environment Packages
-# XFCE desktop with display manager and essential desktop applications
+# XFCE desktop with display manager and essential desktop components
 
+# Core desktop
 xfce4
 xfce4-goodies
 xfce4-whiskermenu-plugin
-lightdm
-lightdm-gtk-greeter
-lightdm-gtk-greeter-settings
 xfce4-terminal
-thunar
-thunar-archive-plugin
-thunar-media-tags-plugin
-ristretto
-mousepad
 xfce4-screenshooter
 xfce4-taskmanager
 xfce4-clipman-plugin
 xfce4-power-manager
 xfce4-notifyd
+
+# Display manager
+lightdm
+lightdm-gtk-greeter
+lightdm-gtk-greeter-settings
+
+# File manager
+thunar
+thunar-archive-plugin
+
+# Image viewer
+ristretto
+
+# Text editor
+mousepad
+
+# Networking
 network-manager
 network-manager-gnome
+
+# Audio
 pulseaudio
 pavucontrol
+
+# Bluetooth
 blueman
+
+# System integration
 xdg-user-dirs
 xdg-utils
 gnome-keyring

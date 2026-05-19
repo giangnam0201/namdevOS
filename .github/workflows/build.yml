@@ -70,28 +70,28 @@ jobs:
 
       - name: Patch lb_binary_syslinux
         run: |
-          # Patch ALL live-build scripts that reference the obsolete syslinux
-          # theme paths (ubuntu-oneiric, isolinux-live, syslinux-themes-*).
-          # These themes don't exist in Ubuntu 24.04+.
-          echo "Searching for live-build scripts with theme references..."
-          FOUND=0
-          for SCRIPT in $(find /usr/lib/live /usr/share/live /usr/lib/live-build -type f 2>/dev/null); do
-            if grep -qlE 'syslinux-themes-|gfxboot-theme|ubuntu-oneiric|isolinux-live' "$SCRIPT" 2>/dev/null; then
-              sudo sed -i \
-                -e '/syslinux-themes-/s/^/# PATCHED: /' \
-                -e '/gfxboot-theme-ubuntu/s/^/# PATCHED: /' \
-                -e '/ubuntu-oneiric/s/^/# PATCHED: /' \
-                -e 's|cp.*syslinux/themes.*|true  # PATCHED|g' \
-                -e 's|cp.*isolinux-live.*|true  # PATCHED|g' \
-                "$SCRIPT"
-              echo "Patched: $SCRIPT"
-              FOUND=$((FOUND + 1))
-            fi
-          done
-          # Create fake theme directory as a safety net
+          # Replace lb_binary_syslinux entirely with a no-op.
+          # The script tries to copy syslinux theme files that don't exist in
+          # Ubuntu 24.04. The theme variable is empty, causing paths like
+          # /usr/share/syslinux/themes//isolinux-live which don't exist.
+          # Since we use GRUB-EFI, syslinux theming is unnecessary.
+          SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
+          [ -z "$SCRIPT" ] && SCRIPT=$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name lb_binary_syslinux -type f 2>/dev/null | head -1)
+          if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
+            sudo cp "$SCRIPT" "${SCRIPT}.orig"
+            echo '#!/bin/sh' | sudo tee "$SCRIPT" > /dev/null
+            echo '# PATCHED by namdevOS: syslinux themes disabled' | sudo tee -a "$SCRIPT" > /dev/null
+            echo 'exit 0' | sudo tee -a "$SCRIPT" > /dev/null
+            sudo chmod +x "$SCRIPT"
+            echo "Replaced $SCRIPT with no-op"
+          else
+            echo "lb_binary_syslinux not found — skipping"
+          fi
+          # Create fake theme dirs as safety net
+          sudo mkdir -p /usr/share/syslinux/themes/isolinux-live
           sudo mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
-          sudo touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.placeholder
-          echo "Patched $FOUND script(s). Fake theme directory created as fallback."
+          sudo touch /usr/share/syslinux/themes/isolinux-live/isolinux.cfg
+          sudo touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/isolinux.cfg
 
       - name: Build ISO
         run: sudo bash build.sh

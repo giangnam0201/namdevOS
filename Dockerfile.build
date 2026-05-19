@@ -32,20 +32,18 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Pre-patch live-build syslinux theme references (ubuntu-oneiric doesn't exist in 24.04)
-RUN mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live && \
-    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.placeholder && \
-    find /usr/lib/live /usr/share/live /usr/lib/live-build -type f 2>/dev/null | \
-    xargs grep -lE 'syslinux-themes-|gfxboot-theme|ubuntu-oneiric|isolinux-live' 2>/dev/null | \
-    while read -r f; do \
-        sed -i \
-            -e '/syslinux-themes-/s/^/# PATCHED: /' \
-            -e '/gfxboot-theme-ubuntu/s/^/# PATCHED: /' \
-            -e '/ubuntu-oneiric/s/^/# PATCHED: /' \
-            -e 's|cp.*syslinux/themes.*|true|g' \
-            -e 's|cp.*isolinux-live.*|true|g' \
-            "$f"; \
-    done || true
+# Pre-patch live-build syslinux: replace lb_binary_syslinux with no-op
+# The script copies theme files that don't exist in Ubuntu 24.04
+RUN SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true) && \
+    if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then \
+        cp "$SCRIPT" "${SCRIPT}.orig" && \
+        printf '#!/bin/sh\n# PATCHED: syslinux themes disabled\nexit 0\n' > "$SCRIPT" && \
+        chmod +x "$SCRIPT"; \
+    fi && \
+    mkdir -p /usr/share/syslinux/themes/isolinux-live \
+             /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live && \
+    touch /usr/share/syslinux/themes/isolinux-live/isolinux.cfg \
+          /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/isolinux.cfg
 
 # Set working directory
 WORKDIR /build

@@ -1,32 +1,19 @@
 # namdevOS Theming Packages
 # Custom look and feel - dark theme, icons, cursors, fonts
 
-# GTK Themes
-arc-theme
-materia-gtk-theme
-
-# Icon themes
+# Icon theme
 papirus-icon-theme
 
 # Cursor theme
 bibata-cursor-theme
 
-# Fonts - Modern UI fonts
+# Fonts
 fonts-inter
 fonts-jetbrains-mono
-fonts-firacode
-fonts-noto
 fonts-noto-color-emoji
-fonts-ubuntu
-
-# Font rendering
-fontconfig
 
 # Compositor for transparency and effects
 picom
 
-# Neofetch for system info display
+# System info
 neofetch
-
-# Conky for desktop widgets (optional)
-conky-all

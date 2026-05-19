@@ -1,10 +1,5 @@
 # namdevOS Installer Packages
-# Calamares graphical installer framework and dependencies
+# Calamares graphical installer
 
 calamares
 calamares-settings-debian
-qml-module-qtquick2
-qml-module-qtquick-controls
-qml-module-qtquick-controls2
-qml-module-qtquick-layouts
-qml-module-qtquick-window2

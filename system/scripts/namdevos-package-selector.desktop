@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=namdevOS Package Selector
+Comment=Install optional software packages (developer tools, office, multimedia, etc.)
+Exec=/usr/local/bin/namdevos-package-selector.sh
+Icon=system-software-install
+Terminal=false
+Categories=System;Settings;PackageManager;
+Keywords=install;packages;software;developer;tools;

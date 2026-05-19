@@ -278,6 +278,7 @@ alias update='sudo apt update && sudo apt upgrade -y'
 alias cleanup='sudo apt autoremove -y && sudo apt autoclean'
 alias myip='curl -s ifconfig.me'
 alias ports='ss -tulanp'
+alias packages='namdevos-package-selector'
 
 # Show neofetch on first terminal open
 if [ -z "$NEOFETCH_SHOWN" ] && command -v neofetch &>/dev/null; then
@@ -285,5 +286,34 @@ if [ -z "$NEOFETCH_SHOWN" ] && command -v neofetch &>/dev/null; then
     neofetch
 fi
 BASHEOF
+
+# ============================================================
+# Install Package Selector (post-install app chooser)
+# ============================================================
+if [[ -f /tmp/system/scripts/namdevos-package-selector.sh ]]; then
+    cp /tmp/system/scripts/namdevos-package-selector.sh /usr/local/bin/namdevos-package-selector.sh
+    chmod +x /usr/local/bin/namdevos-package-selector.sh
+    # Symlink for easy CLI access
+    ln -sf /usr/local/bin/namdevos-package-selector.sh /usr/local/bin/namdevos-package-selector
+fi
+
+# Install .desktop file for the package selector in applications menu
+if [[ -f /tmp/system/scripts/namdevos-package-selector.desktop ]]; then
+    mkdir -p /usr/share/applications
+    cp /tmp/system/scripts/namdevos-package-selector.desktop /usr/share/applications/
+fi
+
+# Autostart package selector on first login (after welcome)
+cat > /etc/skel/.config/autostart/namdevos-package-selector.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=namdevOS Package Selector
+Comment=Choose optional software to install
+Exec=/usr/local/bin/namdevos-package-selector.sh
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5
+EOF
 
 echo "Desktop environment configured with namdevOS theme"
