@@ -3,32 +3,63 @@
   <defs>
     <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#e94560;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#533483;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="inner-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b81;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e94560;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="bg-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#1a1f2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0a0f;stop-opacity:1" />
+    </radialGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#e94560" flood-opacity="0.3"/>
+    </filter>
   </defs>
 
   <!-- Background circle -->
-  <circle cx="128" cy="128" r="120" fill="#1a1a2e" />
+  <circle cx="128" cy="128" r="124" fill="url(#bg-glow)" />
+  <circle cx="128" cy="128" r="124" fill="none" stroke="url(#logo-gradient)" stroke-width="2" opacity="0.6" />
 
-  <!-- Circuit-board inspired "N" mark -->
-  <g fill="none" stroke="url(#logo-gradient)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Main N shape -->
-    <path d="M 80 180 L 80 76 L 176 180 L 176 76" />
-    <!-- Circuit nodes -->
-    <circle cx="80" cy="76" r="6" fill="#e94560" stroke="none" />
-    <circle cx="176" cy="76" r="6" fill="#e94560" stroke="none" />
-    <circle cx="80" cy="180" r="6" fill="#0f3460" stroke="none" />
-    <circle cx="176" cy="180" r="6" fill="#0f3460" stroke="none" />
-    <!-- Circuit traces -->
-    <path d="M 80 76 L 60 56" stroke-width="3" opacity="0.6" />
-    <path d="M 176 76 L 196 56" stroke-width="3" opacity="0.6" />
-    <path d="M 80 180 L 60 200" stroke-width="3" opacity="0.6" />
-    <path d="M 176 180 L 196 200" stroke-width="3" opacity="0.6" />
+  <!-- Outer decorative ring -->
+  <circle cx="128" cy="128" r="110" fill="none" stroke="#e94560" stroke-width="0.5" opacity="0.3" stroke-dasharray="3 6" />
+
+  <!-- Main "N" mark - bold and modern -->
+  <g filter="url(#shadow)">
+    <path d="M 82 175 L 82 81 L 92 81 L 164 160 L 164 81 L 174 81 L 174 175 L 164 175 L 92 96 L 92 175 Z"
+          fill="url(#inner-gradient)" />
   </g>
 
-  <!-- namdevOS text below -->
-  <text x="128" y="232" font-family="sans-serif" font-size="18" font-weight="bold"
-        fill="#ffffff" text-anchor="middle" letter-spacing="1">
+  <!-- Circuit node accents -->
+  <circle cx="82" cy="81" r="5" fill="#00d2d3" opacity="0.8" />
+  <circle cx="174" cy="81" r="5" fill="#00d2d3" opacity="0.8" />
+  <circle cx="82" cy="175" r="5" fill="#533483" opacity="0.8" />
+  <circle cx="174" cy="175" r="5" fill="#533483" opacity="0.8" />
+
+  <!-- Trace lines from corners -->
+  <g stroke="#00d2d3" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round">
+    <path d="M 82 81 L 62 61" />
+    <path d="M 174 81 L 194 61" />
+    <path d="M 62 61 L 50 61" />
+    <path d="M 194 61 L 206 61" />
+  </g>
+  <g stroke="#533483" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round">
+    <path d="M 82 175 L 62 195" />
+    <path d="M 174 175 L 194 195" />
+    <path d="M 62 195 L 50 195" />
+    <path d="M 194 195 L 206 195" />
+  </g>
+
+  <!-- Small dots at trace ends -->
+  <circle cx="50" cy="61" r="2.5" fill="#00d2d3" opacity="0.6" />
+  <circle cx="206" cy="61" r="2.5" fill="#00d2d3" opacity="0.6" />
+  <circle cx="50" cy="195" r="2.5" fill="#533483" opacity="0.6" />
+  <circle cx="206" cy="195" r="2.5" fill="#533483" opacity="0.6" />
+
+  <!-- namdevOS text -->
+  <text x="128" y="225" font-family="'Inter', 'SF Pro Display', sans-serif" font-size="16" font-weight="600"
+        fill="#ffffff" text-anchor="middle" letter-spacing="2" opacity="0.9">
     namdevOS
   </text>
 </svg>

@@ -4,10 +4,10 @@ componentName: namdevos
 strings:
     productName:         "namdevOS"
     shortProductName:    "namdevOS"
-    version:             "1.0"
-    shortVersion:        "1.0"
-    versionedName:       "namdevOS 1.0"
-    shortVersionedName:  "namdevOS 1.0"
+    version:             "1.1"
+    shortVersion:        "1.1"
+    versionedName:       "namdevOS 1.1 Nova"
+    shortVersionedName:  "namdevOS 1.1"
     bootloaderEntryName: "namdevOS"
     productUrl:          "https://github.com/namdevOS/namdevOS"
     supportUrl:          "https://github.com/namdevOS/namdevOS/issues"
@@ -24,7 +24,7 @@ slideshow:               "show.qml"
 slideshowAPI: 2
 
 style:
-    sidebarBackground:   "#1a1a2e"
-    sidebarText:         "#ffffff"
+    sidebarBackground:   "#0d1117"
+    sidebarText:         "#e0e0e0"
     sidebarTextSelect:   "#e94560"
-    sidebarTextHighlight: "#e94560"
+    sidebarTextHighlight: "#00d2d3"

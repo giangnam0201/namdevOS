@@ -1,0 +1,155 @@
+/* namdevOS Custom GTK3 Theme Overrides
+ * Applied on top of the base dark theme to give namdevOS its unique identity
+ * Accent: #e94560 (Crimson Red)
+ * Secondary: #00d2d3 (Cyan)
+ * Background: #0d1117 (Deep Dark)
+ */
+
+/* Window and headerbar styling */
+headerbar, .titlebar {
+    background: linear-gradient(to bottom, #1a1f2e, #151a26);
+    border-bottom: 1px solid rgba(233, 69, 96, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+headerbar:backdrop {
+    background: #151a26;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Accent color for selections, focus, and active states */
+*:selected, *:focus {
+    outline-color: #e94560;
+}
+
+selection, *:selected {
+    background-color: rgba(233, 69, 96, 0.35);
+    color: #ffffff;
+}
+
+/* Buttons */
+button {
+    border-radius: 8px;
+    transition: all 150ms ease;
+}
+
+button:hover {
+    background: rgba(233, 69, 96, 0.1);
+    border-color: rgba(233, 69, 96, 0.3);
+}
+
+button.suggested-action {
+    background: linear-gradient(135deg, #e94560, #c23616);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(233, 69, 96, 0.3);
+}
+
+button.suggested-action:hover {
+    background: linear-gradient(135deg, #ff5a7a, #e94560);
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+}
+
+/* Switches */
+switch:checked {
+    background: linear-gradient(to right, #e94560, #c23616);
+}
+
+switch slider {
+    border-radius: 50%;
+}
+
+/* Scrollbars - thin and modern */
+scrollbar {
+    background: transparent;
+}
+
+scrollbar slider {
+    background: rgba(233, 69, 96, 0.3);
+    border-radius: 10px;
+    min-width: 6px;
+    min-height: 6px;
+}
+
+scrollbar slider:hover {
+    background: rgba(233, 69, 96, 0.5);
+}
+
+/* Entry fields */
+entry {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(13, 17, 23, 0.8);
+    transition: all 150ms ease;
+}
+
+entry:focus {
+    border-color: #e94560;
+    box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+}
+
+/* Progress bars */
+progressbar progress {
+    background: linear-gradient(to right, #e94560, #00d2d3);
+    border-radius: 4px;
+}
+
+progressbar trough {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+/* Tooltips */
+tooltip, tooltip.background {
+    background: #1a1f2e;
+    border: 1px solid rgba(233, 69, 96, 0.3);
+    border-radius: 8px;
+    color: #e0e0e0;
+}
+
+/* Sidebar / navigation */
+.sidebar, placessidebar {
+    background: #0d1117;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar row:selected {
+    background: rgba(233, 69, 96, 0.15);
+    border-left: 3px solid #e94560;
+}
+
+/* Notifications */
+.notification {
+    background: #1a1f2e;
+    border: 1px solid rgba(233, 69, 96, 0.2);
+    border-radius: 12px;
+}
+
+/* Links */
+*:link, button.link {
+    color: #00d2d3;
+}
+
+/* Check and radio buttons */
+check:checked, radio:checked {
+    background: #e94560;
+    border-color: #e94560;
+}
+
+/* Tab styling */
+notebook tab:checked {
+    border-bottom: 2px solid #e94560;
+}
+
+/* Menu styling */
+menu, .menu, .context-menu {
+    background: #1a1f2e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+menu menuitem:hover {
+    background: rgba(233, 69, 96, 0.15);
+    border-radius: 4px;
+}

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Configure XFCE desktop environment defaults
-# Applies panel layout and desktop settings to /etc/skel for new users
+# Applies panel layout, desktop settings, theming, and custom look to /etc/skel
 #
 
 set -euo pipefail
@@ -14,13 +14,23 @@ if [[ ! -d /tmp/branding/xfce ]]; then
     exit 0
 fi
 
+# ============================================================
 # Create XFCE config directories in skel
+# ============================================================
 mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
 mkdir -p /etc/skel/.config/xfce4/panel
 mkdir -p /etc/skel/.config/xfce4/whiskermenu
+mkdir -p /etc/skel/.config/xfce4/terminal
 mkdir -p /etc/skel/.config/autostart
+mkdir -p /etc/skel/.config/gtk-3.0
+mkdir -p /etc/skel/.config/gtk-4.0
+mkdir -p /etc/skel/.config/neofetch
+mkdir -p /etc/skel/.config/picom
+mkdir -p /etc/skel/.local/share/xfce4/terminal/colorschemes
 
-# Copy XFCE panel configuration
+# ============================================================
+# Copy XFCE panel configuration (top bar + bottom dock)
+# ============================================================
 if [[ -f /tmp/branding/xfce/xfce4-panel.xml ]]; then
     cp /tmp/branding/xfce/xfce4-panel.xml \
         /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
@@ -38,12 +48,155 @@ if [[ -f /tmp/branding/xfce/whiskermenu.rc ]]; then
         /etc/skel/.config/xfce4/whiskermenu/defaults.rc
 fi
 
+# ============================================================
+# Apply GTK theme overrides (custom namdevOS accent colors)
+# ============================================================
+if [[ -f /tmp/branding/gtk/gtk-3.0/gtk.css ]]; then
+    cp /tmp/branding/gtk/gtk-3.0/gtk.css /etc/skel/.config/gtk-3.0/gtk.css
+fi
+if [[ -f /tmp/branding/gtk/gtk-4.0/gtk.css ]]; then
+    cp /tmp/branding/gtk/gtk-4.0/gtk.css /etc/skel/.config/gtk-4.0/gtk.css
+fi
+
+# GTK settings - dark theme with custom fonts
+cat > /etc/skel/.config/gtk-3.0/settings.ini << 'EOF'
+[Settings]
+gtk-theme-name=Adwaita-dark
+gtk-icon-theme-name=Papirus-Dark
+gtk-cursor-theme-name=Bibata-Modern-Classic
+gtk-cursor-theme-size=24
+gtk-font-name=Inter 10
+gtk-application-prefer-dark-theme=true
+gtk-decoration-layout=close,minimize,maximize:menu
+gtk-enable-animations=true
+EOF
+
+# ============================================================
+# Terminal configuration (custom color scheme)
+# ============================================================
+if [[ -f /tmp/branding/terminal/terminalrc ]]; then
+    cp /tmp/branding/terminal/terminalrc \
+        /etc/skel/.config/xfce4/terminal/terminalrc
+fi
+
+# ============================================================
+# Neofetch configuration with custom ASCII art
+# ============================================================
+if [[ -f /tmp/branding/neofetch/config.conf ]]; then
+    cp /tmp/branding/neofetch/config.conf /etc/skel/.config/neofetch/config.conf
+fi
+if [[ -f /tmp/branding/neofetch/ascii-art.txt ]]; then
+    mkdir -p /usr/share/namdevos
+    cp /tmp/branding/neofetch/ascii-art.txt /usr/share/namdevos/ascii-art.txt
+fi
+
+# ============================================================
+# Picom compositor config (transparency, shadows, rounded corners)
+# ============================================================
+cat > /etc/skel/.config/picom/picom.conf << 'EOF'
+# namdevOS Picom Compositor Configuration
+# Provides transparency, shadows, and smooth animations
+
+# Backend
+backend = "glx";
+vsync = true;
+glx-no-stencil = true;
+
+# Shadows
+shadow = true;
+shadow-radius = 12;
+shadow-offset-x = -5;
+shadow-offset-y = -5;
+shadow-opacity = 0.35;
+shadow-color = "#000000";
+shadow-exclude = [
+    "name = 'Notification'",
+    "class_g = 'Conky'",
+    "class_g ?= 'Notify-osd'",
+    "class_g = 'xfce4-panel'",
+    "_GTK_FRAME_EXTENTS@:c"
+];
+
+# Fading
+fading = true;
+fade-in-step = 0.04;
+fade-out-step = 0.04;
+fade-delta = 5;
+
+# Opacity
+inactive-opacity = 0.92;
+active-opacity = 1.0;
+frame-opacity = 0.9;
+inactive-opacity-override = false;
+focus-exclude = [
+    "class_g = 'xfce4-panel'"
+];
+opacity-rule = [
+    "90:class_g = 'Thunar' && focused",
+    "85:class_g = 'Thunar' && !focused",
+    "95:class_g = 'xfce4-terminal' && focused",
+    "88:class_g = 'xfce4-terminal' && !focused"
+];
+
+# Rounded corners
+corner-radius = 10;
+rounded-corners-exclude = [
+    "window_type = 'dock'",
+    "window_type = 'desktop'",
+    "class_g = 'xfce4-panel'"
+];
+
+# Blur (if supported)
+blur-method = "dual_kawase";
+blur-strength = 3;
+blur-background-exclude = [
+    "window_type = 'dock'",
+    "window_type = 'desktop'",
+    "class_g = 'xfce4-panel'",
+    "_GTK_FRAME_EXTENTS@:c"
+];
+
+# Animations
+animations = true;
+animation-stiffness = 200;
+animation-window-mass = 0.5;
+animation-dampening = 20;
+animation-clamping = true;
+EOF
+
+# ============================================================
+# XFCE Window Manager theming
+# ============================================================
+cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="Materia-dark"/>
+    <property name="title_font" type="string" value="Inter Semi-Bold 10"/>
+    <property name="button_layout" type="string" value="CHM|"/>
+    <property name="shadow_opacity" type="int" value="60"/>
+    <property name="use_compositing" type="bool" value="false"/>
+    <property name="cycle_workspaces" type="bool" value="true"/>
+    <property name="placement_ratio" type="int" value="20"/>
+    <property name="snap_to_border" type="bool" value="true"/>
+    <property name="snap_to_windows" type="bool" value="true"/>
+    <property name="tile_on_move" type="bool" value="true"/>
+    <property name="wrap_windows" type="bool" value="true"/>
+    <property name="workspace_count" type="int" value="4"/>
+  </property>
+</channel>
+EOF
+
+# ============================================================
 # Set XFCE as default session
+# ============================================================
 if [[ -d /usr/share/xsessions ]]; then
     update-alternatives --set x-session-manager /usr/bin/xfce4-session 2>/dev/null || true
 fi
 
+# ============================================================
 # Install welcome script autostart entry
+# ============================================================
 if [[ -f /tmp/system/scripts/namdevos-welcome.sh ]]; then
     cp /tmp/system/scripts/namdevos-welcome.sh /usr/local/bin/namdevos-welcome.sh
     chmod +x /usr/local/bin/namdevos-welcome.sh
@@ -60,8 +213,23 @@ X-GNOME-Autostart-enabled=true
 EOF
 fi
 
-# Set sensible XFCE keyboard shortcuts in skel
-mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
+# ============================================================
+# Picom autostart (compositor for effects)
+# ============================================================
+cat > /etc/skel/.config/autostart/picom.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=Picom Compositor
+Comment=Compositor for window effects
+Exec=picom --config ~/.config/picom/picom.conf -b
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-enabled=true
+EOF
+
+# ============================================================
+# Keyboard shortcuts
+# ============================================================
 cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml << 'KBEOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfce4-keyboard-shortcuts" version="1.0">
@@ -71,9 +239,51 @@ cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcut
       <property name="&lt;Super&gt;e" type="string" value="thunar"/>
       <property name="&lt;Super&gt;l" type="string" value="xflock4"/>
       <property name="Print" type="string" value="xfce4-screenshooter"/>
+      <property name="&lt;Super&gt;Return" type="string" value="xfce4-terminal --drop-down"/>
+      <property name="&lt;Super&gt;space" type="string" value="xfce4-popup-whiskermenu"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;Delete" type="string" value="xfce4-taskmanager"/>
+    </property>
+  </property>
+  <property name="xfwm4" type="empty">
+    <property name="custom" type="empty">
+      <property name="&lt;Super&gt;Left" type="string" value="tile_left_key"/>
+      <property name="&lt;Super&gt;Right" type="string" value="tile_right_key"/>
+      <property name="&lt;Super&gt;Up" type="string" value="maximize_window_key"/>
+      <property name="&lt;Super&gt;Down" type="string" value="minimize_window_key"/>
+      <property name="&lt;Super&gt;d" type="string" value="show_desktop_key"/>
+      <property name="&lt;Alt&gt;Tab" type="string" value="cycle_windows_key"/>
+      <property name="&lt;Super&gt;Tab" type="string" value="switch_window_key"/>
+      <property name="&lt;Primary&gt;&lt;Super&gt;Left" type="string" value="workspace_1_key"/>
+      <property name="&lt;Primary&gt;&lt;Super&gt;Right" type="string" value="workspace_2_key"/>
     </property>
   </property>
 </channel>
 KBEOF
 
-echo "Desktop environment configured"
+# ============================================================
+# Custom .bashrc additions for namdevOS
+# ============================================================
+cat >> /etc/skel/.bashrc << 'BASHEOF'
+
+# ─── namdevOS Customizations ───────────────────────────────────
+# Custom prompt with namdevOS colors
+PS1='\[\e[38;5;204m\]╭─\[\e[38;5;204m\]\u\[\e[0m\]@\[\e[38;5;44m\]namdevOS\[\e[0m\] \[\e[38;5;141m\]\w\[\e[0m\]\n\[\e[38;5;204m\]╰─➤\[\e[0m\] '
+
+# Aliases
+alias ls='ls --color=auto'
+alias ll='ls -alF --color=auto'
+alias la='ls -A --color=auto'
+alias grep='grep --color=auto'
+alias update='sudo apt update && sudo apt upgrade -y'
+alias cleanup='sudo apt autoremove -y && sudo apt autoclean'
+alias myip='curl -s ifconfig.me'
+alias ports='ss -tulanp'
+
+# Show neofetch on first terminal open
+if [ -z "$NEOFETCH_SHOWN" ] && command -v neofetch &>/dev/null; then
+    export NEOFETCH_SHOWN=1
+    neofetch
+fi
+BASHEOF
+
+echo "Desktop environment configured with namdevOS theme"

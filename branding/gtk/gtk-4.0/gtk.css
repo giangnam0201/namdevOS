@@ -1,0 +1,44 @@
+/* namdevOS Custom GTK4 Theme Overrides
+ * Same accent system as GTK3 for consistency
+ */
+
+@define-color accent_color #e94560;
+@define-color accent_bg_color #e94560;
+@define-color accent_fg_color #ffffff;
+@define-color window_bg_color #0d1117;
+@define-color window_fg_color #e0e0e0;
+@define-color headerbar_bg_color #1a1f2e;
+@define-color headerbar_fg_color #ffffff;
+@define-color card_bg_color #161b22;
+@define-color card_fg_color #e0e0e0;
+@define-color sidebar_bg_color #0d1117;
+@define-color sidebar_fg_color #e0e0e0;
+@define-color popover_bg_color #1a1f2e;
+@define-color popover_fg_color #e0e0e0;
+
+headerbar {
+    background: linear-gradient(to bottom, #1a1f2e, #151a26);
+    border-bottom: 1px solid rgba(233, 69, 96, 0.2);
+}
+
+button.suggested-action {
+    background: linear-gradient(135deg, #e94560, #c23616);
+    color: #ffffff;
+}
+
+switch:checked {
+    background: linear-gradient(to right, #e94560, #c23616);
+}
+
+progressbar progress {
+    background: linear-gradient(to right, #e94560, #00d2d3);
+}
+
+scrollbar slider {
+    background: rgba(233, 69, 96, 0.3);
+}
+
+entry:focus-within {
+    outline-color: #e94560;
+    box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+}

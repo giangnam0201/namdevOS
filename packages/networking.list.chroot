@@ -2,7 +2,6 @@
 # Network connectivity, VPN, and communication tools
 
 # WiFi and Bluetooth
-firmware-linux-free
 wireless-tools
 wpasupplicant
 rfkill

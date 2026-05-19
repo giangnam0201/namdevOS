@@ -1,44 +1,111 @@
 # namdevOS Plymouth Boot Animation Script
-# Simple spinner/progress bar with logo
+# Animated pulsing logo with glowing progress bar
 
-# Background color
-Window.SetBackgroundTopColor(0.10, 0.10, 0.18);
-Window.SetBackgroundBottomColor(0.06, 0.13, 0.25);
+# Background - deep dark matching the wallpaper
+Window.SetBackgroundTopColor(0.04, 0.04, 0.06);
+Window.SetBackgroundBottomColor(0.05, 0.07, 0.10);
 
 # Logo image
 logo_image = Image("namdevos-logo.png");
-logo_sprite = Sprite(logo_image);
-logo_sprite.SetX(Window.GetWidth() / 2 - logo_image.GetWidth() / 2);
-logo_sprite.SetY(Window.GetHeight() / 2 - logo_image.GetHeight() / 2 - 50);
+logo_scaled = logo_image.Scale(128, 128);
+logo_sprite = Sprite(logo_scaled);
+logo_sprite.SetX(Window.GetWidth() / 2 - 64);
+logo_sprite.SetY(Window.GetHeight() / 2 - 100);
+logo_sprite.SetOpacity(1.0);
+
+# Pulsing glow behind logo
+glow_size = 200;
+glow_image = Image(glow_size, glow_size);
+for (x = 0; x < glow_size; x++) {
+    for (y = 0; y < glow_size; y++) {
+        dx = x - glow_size / 2;
+        dy = y - glow_size / 2;
+        dist = Math.Sqrt(dx * dx + dy * dy) / (glow_size / 2);
+        if (dist < 1.0) {
+            alpha = (1.0 - dist) * 0.15;
+            glow_image.SetPixel(x, y, 0.91, 0.27, 0.38, alpha);
+        }
+    }
+}
+glow_sprite = Sprite(glow_image);
+glow_sprite.SetX(Window.GetWidth() / 2 - glow_size / 2);
+glow_sprite.SetY(Window.GetHeight() / 2 - 100 - (glow_size - 128) / 2);
+glow_sprite.SetZ(-1);
 
 # Progress bar configuration
-progress_bar_width = 300;
-progress_bar_height = 4;
+progress_bar_width = 280;
+progress_bar_height = 3;
+bar_x = Window.GetWidth() / 2 - progress_bar_width / 2;
+bar_y = Window.GetHeight() / 2 + 60;
 
-# Create progress bar background
+# Progress bar background (subtle)
 progress_bg = Image(progress_bar_width, progress_bar_height);
 for (x = 0; x < progress_bar_width; x++) {
     for (y = 0; y < progress_bar_height; y++) {
-        progress_bg.SetPixel(x, y, 0.2, 0.2, 0.3, 1.0);
+        progress_bg.SetPixel(x, y, 1.0, 1.0, 1.0, 0.08);
     }
 }
 progress_bg_sprite = Sprite(progress_bg);
-progress_bg_sprite.SetX(Window.GetWidth() / 2 - progress_bar_width / 2);
-progress_bg_sprite.SetY(Window.GetHeight() / 2 + 80);
+progress_bg_sprite.SetX(bar_x);
+progress_bg_sprite.SetY(bar_y);
 
-# Progress bar fill
-progress_fill = Image(progress_bar_width, progress_bar_height);
-progress_fill_sprite = Sprite(progress_fill);
-progress_fill_sprite.SetX(Window.GetWidth() / 2 - progress_bar_width / 2);
-progress_fill_sprite.SetY(Window.GetHeight() / 2 + 80);
+# Progress bar fill (gradient from red to cyan)
+progress_fill_sprite = Sprite();
+progress_fill_sprite.SetX(bar_x);
+progress_fill_sprite.SetY(bar_y);
 
-# Spinner animation
-spinner_angle = 0;
+# Dots animation below progress bar
+num_dots = 3;
+dot_sprites = [];
+dot_size = 6;
+dot_spacing = 16;
+dots_start_x = Window.GetWidth() / 2 - (num_dots * dot_spacing) / 2;
+dots_y = bar_y + 30;
+
+for (i = 0; i < num_dots; i++) {
+    dot_img = Image(dot_size, dot_size);
+    for (x = 0; x < dot_size; x++) {
+        for (y = 0; y < dot_size; y++) {
+            dx = x - dot_size / 2;
+            dy = y - dot_size / 2;
+            if (dx * dx + dy * dy <= (dot_size / 2) * (dot_size / 2)) {
+                dot_img.SetPixel(x, y, 0.91, 0.27, 0.38, 0.6);
+            }
+        }
+    }
+    dot_sprites[i] = Sprite(dot_img);
+    dot_sprites[i].SetX(dots_start_x + i * dot_spacing);
+    dot_sprites[i].SetY(dots_y);
+    dot_sprites[i].SetOpacity(0.3);
+}
+
+# Animation state
+anim_counter = 0;
+pulse_direction = 1;
+pulse_opacity = 0.8;
 
 fun refresh_callback() {
-    spinner_angle += 5;
-    if (spinner_angle >= 360) {
-        spinner_angle = 0;
+    global.anim_counter++;
+
+    # Pulse the glow
+    global.pulse_opacity += global.pulse_direction * 0.01;
+    if (global.pulse_opacity >= 1.0) {
+        global.pulse_direction = -1;
+    }
+    if (global.pulse_opacity <= 0.5) {
+        global.pulse_direction = 1;
+    }
+    glow_sprite.SetOpacity(global.pulse_opacity * 0.4);
+
+    # Animate dots (wave pattern)
+    for (i = 0; i < num_dots; i++) {
+        phase = (global.anim_counter + i * 8) % 30;
+        if (phase < 15) {
+            opacity = 0.3 + (phase / 15.0) * 0.7;
+        } else {
+            opacity = 1.0 - ((phase - 15) / 15.0) * 0.7;
+        }
+        dot_sprites[i].SetOpacity(opacity);
     }
 }
 
@@ -47,11 +114,17 @@ Plymouth.SetRefreshFunction(refresh_callback);
 # Boot progress callback
 fun boot_progress_callback(duration, progress) {
     fill_width = Math.Int(progress_bar_width * progress);
+    if (fill_width < 1) fill_width = 1;
 
     new_fill = Image(fill_width, progress_bar_height);
     for (x = 0; x < fill_width; x++) {
+        # Gradient from crimson to cyan
+        ratio = x / progress_bar_width;
+        r = 0.91 * (1.0 - ratio) + 0.0 * ratio;
+        g = 0.27 * (1.0 - ratio) + 0.82 * ratio;
+        b = 0.38 * (1.0 - ratio) + 0.83 * ratio;
         for (y = 0; y < progress_bar_height; y++) {
-            new_fill.SetPixel(x, y, 0.91, 0.27, 0.38, 1.0);
+            new_fill.SetPixel(x, y, r, g, b, 0.9);
         }
     }
     progress_fill_sprite.SetImage(new_fill);
@@ -61,7 +134,7 @@ Plymouth.SetBootProgressFunction(boot_progress_callback);
 
 # Message callback
 fun message_callback(text) {
-    # Display status messages below progress bar
+    # Messages handled silently for clean boot
 }
 
 Plymouth.SetMessageFunction(message_callback);

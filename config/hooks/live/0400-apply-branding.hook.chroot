@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Apply namdevOS branding to system locations
-# Copies wallpapers, logos, Plymouth theme, and LightDM config
+# Copies wallpapers, logos, Plymouth theme, LightDM config, and GTK overrides
 #
 
 set -euo pipefail
@@ -14,18 +14,46 @@ if [[ ! -d /tmp/branding ]]; then
     exit 0
 fi
 
-# Install wallpaper
+# Install wallpapers
 mkdir -p /usr/share/backgrounds/namdevos
 if [[ -f /tmp/branding/wallpapers/namdevos-default.svg ]]; then
     cp /tmp/branding/wallpapers/namdevos-default.svg \
         /usr/share/backgrounds/namdevos/namdevos-default.svg
 fi
+if [[ -f /tmp/branding/wallpapers/namdevos-minimal.svg ]]; then
+    cp /tmp/branding/wallpapers/namdevos-minimal.svg \
+        /usr/share/backgrounds/namdevos/namdevos-minimal.svg
+fi
+
+# Create wallpaper XML for XFCE background list
+cat > /usr/share/gnome-background-properties/namdevos-wallpapers.xml << 'WPEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>namdevOS Default</name>
+    <filename>/usr/share/backgrounds/namdevos/namdevos-default.svg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>namdevOS Minimal</name>
+    <filename>/usr/share/backgrounds/namdevos/namdevos-minimal.svg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+  </wallpaper>
+</wallpapers>
+WPEOF
+mkdir -p /usr/share/gnome-background-properties
 
 # Install logo
 mkdir -p /usr/share/icons/namdevos
 if [[ -f /tmp/branding/logo/namdevos-logo.svg ]]; then
     cp /tmp/branding/logo/namdevos-logo.svg \
         /usr/share/icons/namdevos/namdevos-logo.svg
+    # Also install to pixmaps for broader compatibility
+    mkdir -p /usr/share/pixmaps
+    cp /tmp/branding/logo/namdevos-logo.svg /usr/share/pixmaps/namdevos-logo.svg
 fi
 
 # Install Plymouth theme
@@ -53,5 +81,28 @@ if [[ -f /tmp/branding/lightdm/lightdm-gtk-greeter.conf ]]; then
     cp /tmp/branding/lightdm/lightdm-gtk-greeter.conf \
         /etc/lightdm/lightdm-gtk-greeter.conf
 fi
+
+# Install OS release branding
+cat > /etc/lsb-release << 'EOF'
+DISTRIB_ID=namdevOS
+DISTRIB_RELEASE=1.1
+DISTRIB_CODENAME=nova
+DISTRIB_DESCRIPTION="namdevOS 1.1 Nova"
+EOF
+
+cat > /etc/os-release << 'EOF'
+PRETTY_NAME="namdevOS 1.1 Nova"
+NAME="namdevOS"
+VERSION_ID="1.1"
+VERSION="1.1 (Nova)"
+VERSION_CODENAME=nova
+ID=namdevos
+ID_LIKE=ubuntu debian
+HOME_URL="https://github.com/namdevOS/namdevOS"
+SUPPORT_URL="https://github.com/namdevOS/namdevOS/issues"
+BUG_REPORT_URL="https://github.com/namdevOS/namdevOS/issues"
+PRIVACY_POLICY_URL="https://github.com/namdevOS/namdevOS"
+UBUNTU_CODENAME=noble
+EOF
 
 echo "Branding applied successfully"

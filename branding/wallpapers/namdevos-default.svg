@@ -1,50 +1,153 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
   <defs>
-    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+    <!-- Main background gradient - deep space feel -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#0d1117;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#111827;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0e1a;stop-opacity:1" />
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#e94560;stop-opacity:0.15" />
+
+    <!-- Accent glow -->
+    <radialGradient id="glow1" cx="25%" cy="35%" r="35%">
+      <stop offset="0%" style="stop-color:#e94560;stop-opacity:0.08" />
       <stop offset="100%" style="stop-color:#e94560;stop-opacity:0" />
     </radialGradient>
+    <radialGradient id="glow2" cx="75%" cy="65%" r="40%">
+      <stop offset="0%" style="stop-color:#533483;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#533483;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow3" cx="50%" cy="50%" r="25%">
+      <stop offset="0%" style="stop-color:#00d2d3;stop-opacity:0.06" />
+      <stop offset="100%" style="stop-color:#00d2d3;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Logo gradient -->
+    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e94560" />
+      <stop offset="50%" style="stop-color:#c23616" />
+      <stop offset="100%" style="stop-color:#e94560" />
+    </linearGradient>
+
+    <!-- Mesh gradient simulation -->
+    <filter id="blur1">
+      <feGaussianBlur stdDeviation="80" />
+    </filter>
+    <filter id="blur2">
+      <feGaussianBlur stdDeviation="120" />
+    </filter>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feBlend in="SourceGraphic" mode="overlay" result="blend"/>
+      <feComposite in="blend" in2="SourceGraphic" operator="in"/>
+    </filter>
   </defs>
 
-  <!-- Background gradient -->
-  <rect width="1920" height="1080" fill="url(#bg-gradient)" />
+  <!-- Deep dark background -->
+  <rect width="3840" height="2160" fill="url(#bg)" />
 
-  <!-- Subtle glow effect -->
-  <ellipse cx="960" cy="540" rx="600" ry="400" fill="url(#glow)" />
+  <!-- Ambient color blobs for depth -->
+  <ellipse cx="900" cy="700" rx="800" ry="600" fill="url(#glow1)" filter="url(#blur1)" />
+  <ellipse cx="2900" cy="1400" rx="900" ry="700" fill="url(#glow2)" filter="url(#blur2)" />
+  <ellipse cx="1920" cy="1080" rx="600" ry="500" fill="url(#glow3)" filter="url(#blur1)" />
 
-  <!-- Decorative circuit-like lines -->
-  <g stroke="#e94560" stroke-width="0.5" fill="none" opacity="0.3">
-    <path d="M 100 200 L 300 200 L 350 250 L 500 250" />
-    <path d="M 1420 800 L 1620 800 L 1670 850 L 1820 850" />
-    <path d="M 200 900 L 400 900 L 420 880 L 600 880" />
-    <path d="M 1500 180 L 1650 180 L 1680 210 L 1800 210" />
-    <circle cx="300" cy="200" r="3" fill="#e94560" />
-    <circle cx="500" cy="250" r="3" fill="#e94560" />
-    <circle cx="1620" cy="800" r="3" fill="#e94560" />
-    <circle cx="1820" cy="850" r="3" fill="#e94560" />
+  <!-- Geometric constellation pattern - unique to namdevOS -->
+  <g stroke="#e94560" fill="none" opacity="0.15" stroke-width="1">
+    <!-- Large hexagonal network -->
+    <polygon points="1920,300 2220,473 2220,820 1920,993 1620,820 1620,473" />
+    <polygon points="1920,450 2120,560 2120,780 1920,890 1720,780 1720,560" />
+    <!-- Connection lines radiating outward -->
+    <line x1="1920" y1="300" x2="1920" y2="100" />
+    <line x1="2220" y1="473" x2="2500" y2="350" />
+    <line x1="2220" y1="820" x2="2500" y2="950" />
+    <line x1="1920" y1="993" x2="1920" y2="1150" />
+    <line x1="1620" y1="820" x2="1340" y2="950" />
+    <line x1="1620" y1="473" x2="1340" y2="350" />
   </g>
 
-  <!-- namdevOS text -->
-  <text x="960" y="520" font-family="sans-serif" font-size="72" font-weight="bold"
-        fill="#ffffff" text-anchor="middle" letter-spacing="4">
-    namdevOS
-  </text>
+  <!-- Floating geometric shapes - triangles -->
+  <g fill="none" stroke="#00d2d3" stroke-width="0.8" opacity="0.12">
+    <polygon points="400,200 450,280 350,280" />
+    <polygon points="3400,400 3450,480 3350,480" />
+    <polygon points="600,1700 650,1780 550,1780" />
+    <polygon points="3200,1600 3250,1680 3150,1680" />
+    <polygon points="200,1000 250,1080 150,1080" />
+    <polygon points="3600,900 3650,980 3550,980" />
+  </g>
 
-  <!-- Tagline -->
-  <text x="960" y="580" font-family="sans-serif" font-size="20"
-        fill="#a0a0b0" text-anchor="middle" letter-spacing="2">
-    Built for Developers
-  </text>
+  <!-- Floating dots / stars -->
+  <g fill="#ffffff" opacity="0.4">
+    <circle cx="300" cy="400" r="1.5" />
+    <circle cx="700" cy="200" r="1" />
+    <circle cx="1100" cy="350" r="1.5" />
+    <circle cx="1500" cy="150" r="1" />
+    <circle cx="2300" cy="250" r="1.5" />
+    <circle cx="2700" cy="180" r="1" />
+    <circle cx="3100" cy="320" r="1.5" />
+    <circle cx="3500" cy="500" r="1" />
+    <circle cx="200" cy="1500" r="1" />
+    <circle cx="500" cy="1800" r="1.5" />
+    <circle cx="900" cy="1900" r="1" />
+    <circle cx="1300" cy="1700" r="1.5" />
+    <circle cx="2500" cy="1850" r="1" />
+    <circle cx="2900" cy="1950" r="1.5" />
+    <circle cx="3300" cy="1750" r="1" />
+    <circle cx="3700" cy="1600" r="1.5" />
+  </g>
 
-  <!-- Version indicator -->
-  <text x="960" y="620" font-family="monospace" font-size="14"
-        fill="#e94560" text-anchor="middle" opacity="0.8">
-    v1.0
-  </text>
+  <!-- Accent lines - circuit board traces -->
+  <g stroke="#e94560" stroke-width="1.5" fill="none" opacity="0.2">
+    <path d="M 0 1400 Q 400 1350 800 1500 T 1600 1400" />
+    <path d="M 2200 700 Q 2600 650 3000 800 T 3840 700" />
+  </g>
+  <g stroke="#533483" stroke-width="1" fill="none" opacity="0.15">
+    <path d="M 0 800 Q 500 750 1000 900 T 2000 800" />
+    <path d="M 1800 1600 Q 2300 1550 2800 1700 T 3840 1600" />
+  </g>
+
+  <!-- Central namdevOS branding -->
+  <g transform="translate(1920, 1080)">
+    <!-- Outer ring -->
+    <circle cx="0" cy="0" r="180" fill="none" stroke="#e94560" stroke-width="1" opacity="0.2" />
+    <circle cx="0" cy="0" r="220" fill="none" stroke="#533483" stroke-width="0.5" opacity="0.15" stroke-dasharray="4 8" />
+
+    <!-- Logo N mark -->
+    <g fill="none" stroke="url(#logo-grad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+      <path d="M -40 50 L -40 -50 L 40 50 L 40 -50" />
+      <circle cx="-40" cy="-50" r="4" fill="#e94560" stroke="none" />
+      <circle cx="40" cy="-50" r="4" fill="#e94560" stroke="none" />
+      <circle cx="-40" cy="50" r="4" fill="#533483" stroke="none" />
+      <circle cx="40" cy="50" r="4" fill="#533483" stroke="none" />
+    </g>
+
+    <!-- namdevOS text -->
+    <text x="0" y="120" font-family="'SF Pro Display', 'Inter', 'Segoe UI', sans-serif" font-size="48" font-weight="300"
+          fill="#ffffff" text-anchor="middle" letter-spacing="8" opacity="0.9">
+      namdevOS
+    </text>
+
+    <!-- Tagline -->
+    <text x="0" y="160" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="14"
+          fill="#00d2d3" text-anchor="middle" letter-spacing="4" opacity="0.7">
+      DEVELOPER WORKSTATION
+    </text>
+  </g>
+
+  <!-- Corner accents -->
+  <g stroke="#e94560" stroke-width="2" fill="none" opacity="0.3">
+    <!-- Top-left -->
+    <path d="M 60 60 L 60 30 L 90 30" />
+    <path d="M 60 60 L 30 60 L 30 30" opacity="0.15" />
+    <!-- Top-right -->
+    <path d="M 3780 60 L 3780 30 L 3750 30" />
+    <!-- Bottom-left -->
+    <path d="M 60 2100 L 60 2130 L 90 2130" />
+    <!-- Bottom-right -->
+    <path d="M 3780 2100 L 3780 2130 L 3750 2130" />
+  </g>
+
+  <!-- Subtle film grain overlay -->
+  <rect width="3840" height="2160" opacity="0.03" filter="url(#noise)" />
 </svg>

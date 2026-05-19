@@ -66,10 +66,9 @@ ripgrep
 fd-find
 fzf
 bat
-exa
+eza
 tldr
 httpie
 
 # Debugging and profiling
 linux-tools-generic
-perf-tools-unstable
