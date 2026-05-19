@@ -316,4 +316,66 @@ X-GNOME-Autostart-enabled=true
 X-GNOME-Autostart-Delay=5
 EOF
 
+# ============================================================
+# Create "Install namdevOS" desktop shortcut (replaces "Install Debian")
+# ============================================================
+mkdir -p /usr/share/applications
+cat > /usr/share/applications/namdevos-installer.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=Install namdevOS
+Comment=Install namdevOS to your hard drive
+Exec=sudo calamares
+Icon=calamares
+Terminal=false
+Categories=System;
+Keywords=install;calamares;system;
+EOF
+
+# Also put it on the desktop for the live session
+mkdir -p /etc/skel/Desktop
+cp /usr/share/applications/namdevos-installer.desktop /etc/skel/Desktop/
+chmod +x /etc/skel/Desktop/namdevos-installer.desktop
+
+# Remove the default "Install Debian" shortcut if it exists
+rm -f /usr/share/applications/calamares-install-debian.desktop 2>/dev/null || true
+rm -f /usr/share/applications/install-debian.desktop 2>/dev/null || true
+
+# ============================================================
+# Apply configs to live session user too (casper creates "ubuntu" user)
+# The live user is created BEFORE /etc/skel is populated, so we need
+# to copy everything there explicitly.
+# ============================================================
+# casper will create the user at boot time and copy /etc/skel, BUT
+# we set up a script that runs at login to ensure configs are applied
+cat > /etc/profile.d/namdevos-live-setup.sh << 'LIVEEOF'
+#!/bin/bash
+# One-time setup for the live session - copies skel configs if missing
+if [ -f /run/live/medium/.disk/info ] || [ -f /cdrom/.disk/info ]; then
+    if [ ! -f "$HOME/.config/namdevos/.live-configured" ]; then
+        # Copy skel configs to this user
+        cp -rn /etc/skel/.config "$HOME/" 2>/dev/null || true
+        cp -rn /etc/skel/.bashrc "$HOME/.bashrc" 2>/dev/null || true
+        cp -rn /etc/skel/Desktop "$HOME/" 2>/dev/null || true
+        mkdir -p "$HOME/.config/namdevos"
+        touch "$HOME/.config/namdevos/.live-configured"
+    fi
+fi
+LIVEEOF
+chmod +x /etc/profile.d/namdevos-live-setup.sh
+
+# ============================================================
+# Set wallpaper system-wide (affects live session immediately)
+# ============================================================
+# Create an Xsession script that sets wallpaper on ANY user login
+cat > /etc/X11/Xsession.d/99-namdevos-wallpaper << 'XSEOF'
+# Set namdevOS wallpaper
+if command -v xfconf-query >/dev/null 2>&1; then
+    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitorVirtual-1/workspace0/last-image \
+        -s /usr/share/backgrounds/namdevos/namdevos-default.svg 2>/dev/null &
+    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image \
+        -s /usr/share/backgrounds/namdevos/namdevos-default.svg 2>/dev/null &
+fi
+XSEOF
+
 echo "Desktop environment configured with namdevOS theme"

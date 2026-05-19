@@ -8,6 +8,13 @@ set -euo pipefail
 
 echo "Running cleanup..."
 
+# Remove "Install Debian" desktop files from calamares-settings-debian
+rm -f /usr/share/applications/calamares-install-debian.desktop 2>/dev/null || true
+rm -f /usr/share/applications/install-debian.desktop 2>/dev/null || true
+# Remove from any user desktop
+find /home -name "calamares-install-debian.desktop" -delete 2>/dev/null || true
+find /home -name "install-debian.desktop" -delete 2>/dev/null || true
+
 # Clean apt cache
 apt-get clean
 apt-get autoremove -y --purge
