@@ -123,6 +123,7 @@ required_lists=(
     "packages/desktop.list.chroot"
     "packages/developer.list.chroot"
     "packages/multimedia.list.chroot"
+    "packages/networking.list.chroot"
     "packages/utilities.list.chroot"
 )
 

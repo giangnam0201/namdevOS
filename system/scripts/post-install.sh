@@ -23,7 +23,7 @@ if getent group docker &>/dev/null; then
     fi
 fi
 
-# Set zsh as available default shell option
+# Set zsh as available default shell option and install oh-my-zsh skeleton
 if command -v zsh &>/dev/null; then
     if ! grep -q "/usr/bin/zsh" /etc/shells; then
         echo "/usr/bin/zsh" >> /etc/shells
@@ -36,6 +36,8 @@ if command -v git &>/dev/null; then
     git config --system init.defaultBranch main
     git config --system pull.rebase false
     git config --system core.autocrlf input
+    git config --system core.editor "vim"
+    git config --system color.ui auto
     echo "Git system defaults configured"
 fi
 
@@ -52,6 +54,42 @@ fi
 if systemctl list-unit-files | grep -q "ssh.service"; then
     systemctl enable ssh
     echo "SSH service enabled"
+fi
+
+# Enable CUPS printing service
+if systemctl list-unit-files | grep -q "cups.service"; then
+    systemctl enable cups
+    echo "CUPS printing service enabled"
+fi
+
+# Enable Bluetooth service
+if systemctl list-unit-files | grep -q "bluetooth.service"; then
+    systemctl enable bluetooth
+    echo "Bluetooth service enabled"
+fi
+
+# Configure Flatpak with Flathub
+if command -v flatpak &>/dev/null; then
+    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+    echo "Flathub repository configured"
+fi
+
+# Set up automatic security updates
+if command -v unattended-upgrades &>/dev/null; then
+    systemctl enable unattended-upgrades 2>/dev/null || true
+    echo "Automatic security updates enabled"
+fi
+
+# Configure timezone to UTC by default (user can change during install)
+timedatectl set-ntp true 2>/dev/null || true
+
+# Optimize SSD if detected
+if [[ -f /sys/block/sda/queue/rotational ]]; then
+    if [[ "$(cat /sys/block/sda/queue/rotational)" == "0" ]]; then
+        # Enable TRIM for SSDs
+        systemctl enable fstrim.timer 2>/dev/null || true
+        echo "SSD TRIM timer enabled"
+    fi
 fi
 
 # Mark first-boot configuration as complete

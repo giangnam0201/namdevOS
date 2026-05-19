@@ -6,6 +6,11 @@ ubuntu-standard
 linux-generic
 linux-headers-generic
 casper
+lupin-casper
 librsvg2-bin
 plymouth
 plymouth-themes
+grub-efi-amd64-signed
+shim-signed
+efibootmgr
+os-prober

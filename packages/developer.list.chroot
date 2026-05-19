@@ -1,24 +1,31 @@
 # namdevOS Developer Tools
 # Programming languages, editors, version control, and development utilities
 
+# Version control
 git
+git-lfs
+
+# Editors
 vim
 neovim
+
+# Network tools
 curl
 wget
+openssh-server
+openssh-client
+net-tools
+nmap
+dnsutils
+
+# System monitoring
 htop
+btop
+iotop
+sysstat
+
+# Build essentials
 build-essential
-python3
-python3-pip
-python3-venv
-nodejs
-docker.io
-docker-compose
-firefox
-chromium-browser
-terminator
-zsh
-tmux
 gcc
 g++
 make
@@ -26,11 +33,43 @@ cmake
 gdb
 valgrind
 strace
-openssh-server
-net-tools
+ltrace
+
+# Python
+python3
+python3-pip
+python3-venv
+python3-dev
+
+# Node.js
+nodejs
+npm
+
+# Containers
+docker.io
+docker-compose
+
+# Browsers
+firefox
+
+# Terminal tools
+terminator
+zsh
+tmux
+screen
+
+# Modern CLI utilities
 jq
+yq
 tree
 ripgrep
 fd-find
 fzf
 bat
+exa
+tldr
+httpie
+
+# Debugging and profiling
+linux-tools-generic
+perf-tools-unstable

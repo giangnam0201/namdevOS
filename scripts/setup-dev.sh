@@ -29,7 +29,10 @@ apt-get install -y \
     squashfs-tools \
     xorriso \
     isolinux \
-    syslinux-utils
+    syslinux-common \
+    syslinux-utils \
+    mtools \
+    grub-efi-amd64-bin
 
 # Development tools
 apt-get install -y \

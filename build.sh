@@ -8,7 +8,7 @@ set -euo pipefail
 
 # Configuration
 DISTRO_NAME="namdevOS"
-DISTRO_VERSION="1.0"
+DISTRO_VERSION="1.1"
 BUILD_DIR="build"
 CONFIG_DIR="config/live-build"
 PACKAGES_DIR="packages"
@@ -64,23 +64,53 @@ check_root() {
 }
 
 patch_syslinux() {
-    local script
-    script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
-    [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live 2>/dev/null -name lb_binary_syslinux | head -1)
-    if [[ -n "$script" && -f "$script" ]]; then
-        sed -i \
-            -e 's/.*syslinux-themes-.*/true/' \
-            -e 's/.*gfxboot-theme-ubuntu.*/true/' \
-            -e 's|.*cp.*themes.*|true|' \
-            "$script"
-        log_success "lb_binary_syslinux patched (themes + cp)"
+    log_info "Patching live-build syslinux theme handling..."
+
+    # Find all live-build scripts that reference syslinux themes
+    local scripts=()
+    while IFS= read -r -d '' f; do
+        scripts+=("$f")
+    done < <(find /usr/lib/live /usr/share/live /usr/lib/live-build 2>/dev/null -type f -print0)
+
+    # Also check the specific known script path
+    local main_script
+    main_script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
+    [[ -n "$main_script" && -f "$main_script" ]] && scripts+=("$main_script")
+
+    local patched=0
+    for script in "${scripts[@]}"; do
+        [[ -f "$script" ]] || continue
+        if grep -qE 'syslinux-themes-|gfxboot-theme|ubuntu-oneiric|isolinux-live' "$script" 2>/dev/null; then
+            sed -i \
+                -e '/syslinux-themes-/s/^/# PATCHED: /' \
+                -e '/gfxboot-theme-ubuntu/s/^/# PATCHED: /' \
+                -e '/ubuntu-oneiric/s/^/# PATCHED: /' \
+                -e 's|cp.*syslinux/themes.*|true  # PATCHED: theme copy disabled|g' \
+                -e 's|cp.*isolinux-live.*|true  # PATCHED: theme copy disabled|g' \
+                "$script"
+            patched=$((patched + 1))
+        fi
+    done
+
+    # Create a fake theme directory so any remaining cp commands won't fail
+    mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
+    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.placeholder
+
+    if [[ $patched -gt 0 ]]; then
+        log_success "Patched ${patched} live-build script(s) for syslinux themes"
     else
-        log_warn "lb_binary_syslinux not found — skipping patch"
+        log_warn "No syslinux theme references found to patch (may already be clean)"
+    fi
+
+    # Also ensure the syslinux theme package issue won't block the build
+    # by creating a dummy package status if needed
+    if ! dpkg -l syslinux-common &>/dev/null 2>&1; then
+        apt-get install -y syslinux-common 2>/dev/null || true
     fi
 }
 
 install_dependencies() {
-    local deps=(live-build debootstrap squashfs-tools xorriso isolinux syslinux-utils grub-efi-amd64 grub-efi-amd64-signed shim-signed)
+    local deps=(live-build debootstrap squashfs-tools xorriso isolinux syslinux-common syslinux-utils mtools grub-efi-amd64 grub-efi-amd64-signed shim-signed grub-efi-amd64-bin)
     local missing=()
 
     for dep in "${deps[@]}"; do

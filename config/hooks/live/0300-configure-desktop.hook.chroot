@@ -18,6 +18,7 @@ fi
 mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
 mkdir -p /etc/skel/.config/xfce4/panel
 mkdir -p /etc/skel/.config/xfce4/whiskermenu
+mkdir -p /etc/skel/.config/autostart
 
 # Copy XFCE panel configuration
 if [[ -f /tmp/branding/xfce/xfce4-panel.xml ]]; then
@@ -41,5 +42,38 @@ fi
 if [[ -d /usr/share/xsessions ]]; then
     update-alternatives --set x-session-manager /usr/bin/xfce4-session 2>/dev/null || true
 fi
+
+# Install welcome script autostart entry
+if [[ -f /tmp/system/scripts/namdevos-welcome.sh ]]; then
+    cp /tmp/system/scripts/namdevos-welcome.sh /usr/local/bin/namdevos-welcome.sh
+    chmod +x /usr/local/bin/namdevos-welcome.sh
+
+    cat > /etc/skel/.config/autostart/namdevos-welcome.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=namdevOS Welcome
+Comment=Welcome wizard for new namdevOS users
+Exec=/usr/local/bin/namdevos-welcome.sh
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-enabled=true
+EOF
+fi
+
+# Set sensible XFCE keyboard shortcuts in skel
+mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
+cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml << 'KBEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-keyboard-shortcuts" version="1.0">
+  <property name="commands" type="empty">
+    <property name="custom" type="empty">
+      <property name="&lt;Primary&gt;&lt;Alt&gt;t" type="string" value="xfce4-terminal"/>
+      <property name="&lt;Super&gt;e" type="string" value="thunar"/>
+      <property name="&lt;Super&gt;l" type="string" value="xflock4"/>
+      <property name="Print" type="string" value="xfce4-screenshooter"/>
+    </property>
+  </property>
+</channel>
+KBEOF
 
 echo "Desktop environment configured"

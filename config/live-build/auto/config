@@ -19,6 +19,7 @@ lb config noauto \
     --debian-installer false \
     --linux-flavours "generic" \
     --linux-packages "linux" \
+    --bootloaders "grub-efi" \
     --iso-application "namdevOS" \
     --iso-publisher "namdevOS Project" \
     --iso-volume "namdevOS 1.0" \

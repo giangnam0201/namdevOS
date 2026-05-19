@@ -1,0 +1,27 @@
+# namdevOS Networking Packages
+# Network connectivity, VPN, and communication tools
+
+# WiFi and Bluetooth
+firmware-linux-free
+wireless-tools
+wpasupplicant
+rfkill
+
+# VPN support
+openvpn
+wireguard
+network-manager-openvpn
+network-manager-openvpn-gnome
+
+# Remote access
+remmina
+remmina-plugin-rdp
+remmina-plugin-vnc
+
+# File sharing
+samba
+smbclient
+
+# Download tools
+aria2
+transmission-gtk

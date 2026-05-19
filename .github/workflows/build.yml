@@ -60,33 +60,38 @@ jobs:
             squashfs-tools \
             xorriso \
             isolinux \
+            syslinux-common \
             syslinux-utils \
+            mtools \
             grub-efi-amd64 \
             grub-efi-amd64-signed \
+            grub-efi-amd64-bin \
             shim-signed
 
       - name: Patch lb_binary_syslinux
         run: |
-          # The install call in lb_binary_syslinux looks like:
-          #   Packages_Install "syslinux-themes-${LB_SYSLINUX_THEME}"
-          # LB_SYSLINUX_THEME is set from the live-build config file before the
-          # script body runs, so we cannot intercept the variable assignment.
-          # However the literal text "syslinux-themes-" IS in the script, so we
-          # match that. gfxboot-theme-ubuntu also appears literally.
-          SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
-          [ -z "$SCRIPT" ] && SCRIPT=$(find /usr/lib/live /usr/share/live -name lb_binary_syslinux 2>/dev/null | head -1)
-          if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
-            sudo sed -i \
-              -e 's/.*syslinux-themes-.*/true/' \
-              -e 's/.*gfxboot-theme-ubuntu.*/true/' \
-              -e 's|.*cp.*themes.*|true|' \
-              "$SCRIPT"
-            echo "Patched: $SCRIPT"
-            grep -n 'syslinux-themes-\|gfxboot-theme\|cp.*themes' "$SCRIPT" \
-              || echo "(no dead theme lines remaining)"
-          else
-            echo "lb_binary_syslinux not found — skipping patch"
-          fi
+          # Patch ALL live-build scripts that reference the obsolete syslinux
+          # theme paths (ubuntu-oneiric, isolinux-live, syslinux-themes-*).
+          # These themes don't exist in Ubuntu 24.04+.
+          echo "Searching for live-build scripts with theme references..."
+          FOUND=0
+          for SCRIPT in $(find /usr/lib/live /usr/share/live /usr/lib/live-build -type f 2>/dev/null); do
+            if grep -qlE 'syslinux-themes-|gfxboot-theme|ubuntu-oneiric|isolinux-live' "$SCRIPT" 2>/dev/null; then
+              sudo sed -i \
+                -e '/syslinux-themes-/s/^/# PATCHED: /' \
+                -e '/gfxboot-theme-ubuntu/s/^/# PATCHED: /' \
+                -e '/ubuntu-oneiric/s/^/# PATCHED: /' \
+                -e 's|cp.*syslinux/themes.*|true  # PATCHED|g' \
+                -e 's|cp.*isolinux-live.*|true  # PATCHED|g' \
+                "$SCRIPT"
+              echo "Patched: $SCRIPT"
+              FOUND=$((FOUND + 1))
+            fi
+          done
+          # Create fake theme directory as a safety net
+          sudo mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
+          sudo touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.placeholder
+          echo "Patched $FOUND script(s). Fake theme directory created as fallback."
 
       - name: Build ISO
         run: sudo bash build.sh

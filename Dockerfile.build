@@ -17,7 +17,10 @@ RUN apt-get update && \
         squashfs-tools \
         xorriso \
         isolinux \
+        syslinux-common \
         syslinux-utils \
+        grub-efi-amd64-bin \
+        mtools \
         apt-utils \
         ca-certificates \
         curl \
@@ -28,6 +31,21 @@ RUN apt-get update && \
         python3-yaml \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Pre-patch live-build syslinux theme references (ubuntu-oneiric doesn't exist in 24.04)
+RUN mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live && \
+    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.placeholder && \
+    find /usr/lib/live /usr/share/live /usr/lib/live-build -type f 2>/dev/null | \
+    xargs grep -lE 'syslinux-themes-|gfxboot-theme|ubuntu-oneiric|isolinux-live' 2>/dev/null | \
+    while read -r f; do \
+        sed -i \
+            -e '/syslinux-themes-/s/^/# PATCHED: /' \
+            -e '/gfxboot-theme-ubuntu/s/^/# PATCHED: /' \
+            -e '/ubuntu-oneiric/s/^/# PATCHED: /' \
+            -e 's|cp.*syslinux/themes.*|true|g' \
+            -e 's|cp.*isolinux-live.*|true|g' \
+            "$f"; \
+    done || true
 
 # Set working directory
 WORKDIR /build

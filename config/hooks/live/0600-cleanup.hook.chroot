@@ -15,25 +15,28 @@ apt-get autoremove -y --purge
 # Remove apt package lists (will be regenerated on first apt update)
 rm -rf /var/lib/apt/lists/*
 
-# Remove temporary files
+# Remove temporary staging files used by earlier hooks
 # NOTE: Hooks 0300-0500 have already consumed files from /tmp/branding/ and
 # /tmp/system/ by this point (hooks run in numeric order). This cleanup is safe
 # because all staging data has been copied to its final destination.
-rm -rf /tmp/*
+rm -rf /tmp/branding
+rm -rf /tmp/system
+
+# Remove other temporary files
+rm -rf /tmp/.??* /tmp/[^.]* 2>/dev/null || true
 rm -rf /var/tmp/*
 
 # Remove log files
 find /var/log -type f -name "*.log" -delete
 find /var/log -type f -name "*.gz" -delete
 
-# Remove documentation to save space (optional, comment out to keep)
-# rm -rf /usr/share/doc/*
-# rm -rf /usr/share/man/*
-
 # Remove cached font data
 rm -rf /var/cache/fontconfig/*
 
 # Remove bash history
 rm -f /root/.bash_history
+
+# Remove leftover dpkg/apt state files
+rm -f /var/cache/apt/*.bin
 
 echo "Cleanup complete"
