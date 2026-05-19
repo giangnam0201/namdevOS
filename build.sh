@@ -69,7 +69,7 @@ patch_syslinux() {
     [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live 2>/dev/null -name lb_binary_syslinux | head -1)
     if [[ -n "$script" && -f "$script" ]]; then
         sed -i \
-            -e 's/.*syslinux-themes-ubuntu-oneiric.*/true/' \
+            -e 's/.*ubuntu-oneiric.*/true/' \
             -e 's/.*gfxboot-theme-ubuntu.*/true/' \
             "$script"
         log_success "lb_binary_syslinux patched"

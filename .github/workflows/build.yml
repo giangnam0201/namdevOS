@@ -71,7 +71,7 @@ jobs:
           [ -z "$SCRIPT" ] && SCRIPT=$(find /usr/lib/live /usr/share/live -name lb_binary_syslinux 2>/dev/null | head -1)
           if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
             sudo sed -i \
-              -e 's/.*syslinux-themes-ubuntu-oneiric.*/true/' \
+              -e 's/.*ubuntu-oneiric.*/true/' \
               -e 's/.*gfxboot-theme-ubuntu.*/true/' \
               "$SCRIPT"
             echo "Patched: $SCRIPT"
