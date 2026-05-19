@@ -28,7 +28,9 @@ apt-get install -y \
     debootstrap \
     squashfs-tools \
     xorriso \
+    genisoimage \
     isolinux \
+    syslinux \
     syslinux-common \
     syslinux-utils \
     mtools \

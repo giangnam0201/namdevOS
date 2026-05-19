@@ -64,47 +64,54 @@ check_root() {
 }
 
 patch_syslinux() {
-    log_info "Neutralizing lb_binary_syslinux (using GRUB-EFI, syslinux themes not needed)..."
+    log_info "Patching live-build syslinux theme handling..."
 
-    # Find the lb_binary_syslinux script and replace it entirely with a no-op.
-    # The script tries to cp theme files that don't exist in Ubuntu 24.04.
-    # The path uses a variable ($LB_SYSLINUX_THEME) which can be empty,
-    # resulting in paths like /usr/share/syslinux/themes//isolinux-live.
+    # Find lb_binary_syslinux - we need it to run (it sets up isolinux boot)
+    # but we must prevent it from trying to copy non-existent theme files.
     local script
     script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
     [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live /usr/lib/live-build 2>/dev/null -name lb_binary_syslinux -type f | head -1)
 
     if [[ -n "$script" && -f "$script" ]]; then
-        # Backup original
-        cp "$script" "${script}.orig"
-        # Replace with a script that just exits successfully
-        cat > "$script" << 'NOOP'
-#!/bin/sh
-# PATCHED by namdevOS: syslinux theme handling disabled (GRUB-EFI only)
-exit 0
-NOOP
-        chmod +x "$script"
-        log_success "lb_binary_syslinux replaced with no-op"
+        # Comment out any line that tries to copy theme files
+        # The problematic pattern is: cp -r /usr/share/syslinux/themes/$THEME/isolinux-live/*
+        # Since $LB_SYSLINUX_THEME can be empty, we match any cp line with 'themes' in path
+        sed -i \
+            -e 's|^\(.*cp.*themes.*/isolinux-live\)|# PATCHED: \1|' \
+            -e 's|^\(.*cp -r.*/usr/share/syslinux/themes\)|# PATCHED: \1|' \
+            -e 's|^\(.*Packages_Install.*syslinux-themes\)|# PATCHED: \1|' \
+            -e 's|^\(.*gfxboot-theme\)|# PATCHED: \1|' \
+            "$script"
+        log_success "lb_binary_syslinux patched (theme lines commented out)"
     else
-        log_warn "lb_binary_syslinux not found — skipping"
+        log_warn "lb_binary_syslinux not found — skipping patch"
     fi
 
-    # Also create fake directories as a belt-and-suspenders approach
-    # in case any other script references these paths
+    # Also patch defaults.sh which may set LB_SYSLINUX_THEME
+    local defaults
+    defaults=$(find /usr/lib/live /usr/share/live /usr/lib/live-build 2>/dev/null -name "defaults.sh" -type f | head -1)
+    if [[ -n "$defaults" && -f "$defaults" ]]; then
+        sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|' "$defaults" 2>/dev/null || true
+    fi
+
+    # Create fake theme directories so any remaining cp commands succeed silently
     mkdir -p /usr/share/syslinux/themes/isolinux-live
     mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
-    # Create a minimal isolinux.cfg so nothing complains
-    touch /usr/share/syslinux/themes/isolinux-live/isolinux.cfg
-    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/isolinux.cfg
+    # Put a dummy file so cp -r doesn't fail on empty dir
+    touch /usr/share/syslinux/themes/isolinux-live/.keep
+    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
 
-    # Ensure syslinux-common is installed
+    # Ensure syslinux-common and isolinux are installed (needed for boot)
     if ! dpkg -l syslinux-common &>/dev/null 2>&1; then
         apt-get install -y syslinux-common 2>/dev/null || true
+    fi
+    if ! dpkg -l isolinux &>/dev/null 2>&1; then
+        apt-get install -y isolinux 2>/dev/null || true
     fi
 }
 
 install_dependencies() {
-    local deps=(live-build debootstrap squashfs-tools xorriso isolinux syslinux-common syslinux-utils mtools grub-efi-amd64 grub-efi-amd64-signed shim-signed grub-efi-amd64-bin)
+    local deps=(live-build debootstrap squashfs-tools xorriso genisoimage isolinux syslinux syslinux-common syslinux-utils mtools grub-efi-amd64 grub-efi-amd64-signed shim-signed grub-efi-amd64-bin)
     local missing=()
 
     for dep in "${deps[@]}"; do

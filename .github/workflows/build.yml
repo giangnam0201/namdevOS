@@ -60,9 +60,11 @@ jobs:
             squashfs-tools \
             xorriso \
             isolinux \
+            syslinux \
             syslinux-common \
             syslinux-utils \
             mtools \
+            genisoimage \
             grub-efi-amd64 \
             grub-efi-amd64-signed \
             grub-efi-amd64-bin \
@@ -70,28 +72,33 @@ jobs:
 
       - name: Patch lb_binary_syslinux
         run: |
-          # Replace lb_binary_syslinux entirely with a no-op.
-          # The script tries to copy syslinux theme files that don't exist in
-          # Ubuntu 24.04. The theme variable is empty, causing paths like
-          # /usr/share/syslinux/themes//isolinux-live which don't exist.
-          # Since we use GRUB-EFI, syslinux theming is unnecessary.
+          # Patch lb_binary_syslinux to skip theme file copying.
+          # We keep the script functional (it creates the isolinux/ boot directory)
+          # but comment out lines that copy non-existent theme files.
           SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
           [ -z "$SCRIPT" ] && SCRIPT=$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name lb_binary_syslinux -type f 2>/dev/null | head -1)
           if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
-            sudo cp "$SCRIPT" "${SCRIPT}.orig"
-            echo '#!/bin/sh' | sudo tee "$SCRIPT" > /dev/null
-            echo '# PATCHED by namdevOS: syslinux themes disabled' | sudo tee -a "$SCRIPT" > /dev/null
-            echo 'exit 0' | sudo tee -a "$SCRIPT" > /dev/null
-            sudo chmod +x "$SCRIPT"
-            echo "Replaced $SCRIPT with no-op"
+            sudo sed -i \
+              -e 's|^\(.*cp.*themes.*/isolinux-live\)|# PATCHED: \1|' \
+              -e 's|^\(.*cp -r.*/usr/share/syslinux/themes\)|# PATCHED: \1|' \
+              -e 's|^\(.*Packages_Install.*syslinux-themes\)|# PATCHED: \1|' \
+              -e 's|^\(.*gfxboot-theme\)|# PATCHED: \1|' \
+              "$SCRIPT"
+            echo "Patched theme lines in: $SCRIPT"
           else
             echo "lb_binary_syslinux not found — skipping"
+          fi
+          # Clear the theme variable in defaults.sh
+          DEFAULTS=$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name "defaults.sh" -type f 2>/dev/null | head -1)
+          if [ -n "$DEFAULTS" ] && [ -f "$DEFAULTS" ]; then
+            sudo sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|' "$DEFAULTS"
+            echo "Cleared LB_SYSLINUX_THEME in: $DEFAULTS"
           fi
           # Create fake theme dirs as safety net
           sudo mkdir -p /usr/share/syslinux/themes/isolinux-live
           sudo mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
-          sudo touch /usr/share/syslinux/themes/isolinux-live/isolinux.cfg
-          sudo touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/isolinux.cfg
+          sudo touch /usr/share/syslinux/themes/isolinux-live/.keep
+          sudo touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
 
       - name: Build ISO
         run: sudo bash build.sh

@@ -16,11 +16,13 @@ RUN apt-get update && \
         debootstrap \
         squashfs-tools \
         xorriso \
+        genisoimage \
         isolinux \
+        syslinux \
         syslinux-common \
         syslinux-utils \
-        grub-efi-amd64-bin \
         mtools \
+        grub-efi-amd64-bin \
         apt-utils \
         ca-certificates \
         curl \
@@ -32,18 +34,25 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Pre-patch live-build syslinux: replace lb_binary_syslinux with no-op
-# The script copies theme files that don't exist in Ubuntu 24.04
+# Pre-patch live-build syslinux: comment out theme copy lines (not a full no-op,
+# because lb_binary_syslinux still needs to create the isolinux/ boot directory)
 RUN SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true) && \
     if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then \
-        cp "$SCRIPT" "${SCRIPT}.orig" && \
-        printf '#!/bin/sh\n# PATCHED: syslinux themes disabled\nexit 0\n' > "$SCRIPT" && \
-        chmod +x "$SCRIPT"; \
+        sed -i \
+            -e 's|^\(.*cp.*themes.*/isolinux-live\)|# PATCHED: \1|' \
+            -e 's|^\(.*cp -r.*/usr/share/syslinux/themes\)|# PATCHED: \1|' \
+            -e 's|^\(.*Packages_Install.*syslinux-themes\)|# PATCHED: \1|' \
+            -e 's|^\(.*gfxboot-theme\)|# PATCHED: \1|' \
+            "$SCRIPT"; \
+    fi && \
+    DEFAULTS=$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name "defaults.sh" -type f 2>/dev/null | head -1) && \
+    if [ -n "$DEFAULTS" ] && [ -f "$DEFAULTS" ]; then \
+        sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|' "$DEFAULTS"; \
     fi && \
     mkdir -p /usr/share/syslinux/themes/isolinux-live \
              /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live && \
-    touch /usr/share/syslinux/themes/isolinux-live/isolinux.cfg \
-          /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/isolinux.cfg
+    touch /usr/share/syslinux/themes/isolinux-live/.keep \
+          /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
 
 # Set working directory
 WORKDIR /build
