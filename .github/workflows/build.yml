@@ -6,6 +6,7 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -36,7 +37,7 @@ jobs:
     name: Build ISO
     runs-on: ubuntu-latest
     needs: validate
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name != 'pull_request'
 
     steps:
       - name: Checkout repository
@@ -58,8 +59,9 @@ jobs:
             debootstrap \
             squashfs-tools \
             xorriso \
-            isolinux \
-            syslinux-utils
+            grub-efi-amd64 \
+            grub-efi-amd64-signed \
+            shim-signed
 
       - name: Build ISO
         run: sudo bash build.sh
@@ -70,3 +72,28 @@ jobs:
           name: namdevos-iso
           path: output/*.iso
           retention-days: 7
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: namdevos-iso
+          path: release/
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" release/*.iso \
+            --repo "${{ github.repository }}" \
+            --title "namdevOS $TAG" \
+            --generate-notes

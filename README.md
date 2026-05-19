@@ -161,4 +161,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to na
 
 ## License
 
-namdevOS is licensed under the [GNU General Public License v3.0](LICENSE).
+namdevOS is licensed under the [GNU General Public License v3.0](LICENSE)

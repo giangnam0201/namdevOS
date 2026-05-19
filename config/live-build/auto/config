@@ -7,13 +7,19 @@ set -e
 
 lb config noauto \
     --binary-images iso-hybrid \
-    --mode ubuntu \
     --architectures amd64 \
     --distribution noble \
     --archive-areas "main restricted universe multiverse" \
+    --mirror-bootstrap "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-chroot "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-chroot-security "http://security.ubuntu.com/ubuntu/" \
+    --mirror-binary "http://archive.ubuntu.com/ubuntu/" \
+    --mirror-binary-security "http://security.ubuntu.com/ubuntu/" \
+    --bootloaders "grub-efi" \
     --bootappend-live "boot=casper quiet splash" \
     --debian-installer false \
-    --linux-packages "linux-generic" \
+    --linux-flavours "generic" \
+    --linux-packages "linux" \
     --iso-application "namdevOS" \
     --iso-publisher "namdevOS Project" \
     --iso-volume "namdevOS 1.0" \

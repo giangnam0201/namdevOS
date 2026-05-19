@@ -64,7 +64,7 @@ check_root() {
 }
 
 install_dependencies() {
-    local deps=(live-build debootstrap squashfs-tools xorriso isolinux syslinux-utils)
+    local deps=(live-build debootstrap squashfs-tools xorriso grub-efi-amd64 grub-efi-amd64-signed shim-signed)
     local missing=()
 
     for dep in "${deps[@]}"; do
