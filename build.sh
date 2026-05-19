@@ -409,24 +409,38 @@ setup_package_lists
 setup_hooks
 setup_includes
 
-# Ensure isohybrid exists at /usr/bin (live-build calls it via /bin/sh which
-# may not have /usr/local/bin in PATH). On Ubuntu 24.04, syslinux-utils may
-# not include isohybrid, so we create a working wrapper unconditionally.
-if [ ! -x /usr/bin/isohybrid ]; then
-    log_info "Creating isohybrid at /usr/bin..."
-    cat > /usr/bin/isohybrid << 'HYBRIDWRAPPER'
+# Force-install a working isohybrid EVERYWHERE it might be needed.
+# live-build's binary.sh calls 'isohybrid' but on Ubuntu 24.04 it doesn't exist
+# or the Perl version is broken. We install it at multiple locations.
+log_info "Installing isohybrid wrapper..."
+cat > /tmp/isohybrid_wrapper << 'HYBRIDWRAPPER'
 #!/bin/sh
-# isohybrid wrapper - makes ISO bootable from USB
-# Falls back gracefully if tools are missing
-ISO="$1"
+# isohybrid wrapper for namdevOS build
+ISO=""
+for arg in "$@"; do
+    case "$arg" in
+        -*) ;;
+        *) ISO="$arg" ;;
+    esac
+done
 [ -z "$ISO" ] && exit 0
+[ ! -f "$ISO" ] && exit 0
 if command -v xorriso >/dev/null 2>&1; then
-    xorriso -indev "$ISO" -boot_image any partition_table=on -outdev "$ISO" 2>/dev/null || true
+    xorriso -indev "$ISO" -boot_image any partition_table=on -outdev "$ISO" 2>/dev/null
 fi
 exit 0
 HYBRIDWRAPPER
-    chmod +x /usr/bin/isohybrid
-fi
+chmod +x /tmp/isohybrid_wrapper
+# Install to every possible location
+cp /tmp/isohybrid_wrapper /usr/bin/isohybrid
+cp /tmp/isohybrid_wrapper /usr/sbin/isohybrid
+cp /tmp/isohybrid_wrapper /usr/local/bin/isohybrid
+cp /tmp/isohybrid_wrapper /bin/isohybrid 2>/dev/null || true
+chmod +x /usr/bin/isohybrid /usr/sbin/isohybrid /usr/local/bin/isohybrid
+# Also make sure PATH includes everything
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+rm -f /tmp/isohybrid_wrapper
+log_success "isohybrid installed to /usr/bin, /usr/sbin, /usr/local/bin"
 
 run_build
 

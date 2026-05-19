@@ -5,4 +5,22 @@
 
 set -eo pipefail
 
+# Ensure isohybrid is available system-wide before building.
+# Ubuntu 24.04 doesn't ship a working isohybrid with syslinux-utils.
+# live-build's internal binary.sh calls it after ISO creation.
+if ! command -v isohybrid >/dev/null 2>&1 || ! isohybrid --help >/dev/null 2>&1; then
+    cat > /usr/bin/isohybrid << 'EOF'
+#!/bin/sh
+ISO=""
+for arg in "$@"; do case "$arg" in -*) ;; *) ISO="$arg" ;; esac; done
+[ -z "$ISO" ] && exit 0
+[ ! -f "$ISO" ] && exit 0
+command -v xorriso >/dev/null 2>&1 && xorriso -indev "$ISO" -boot_image any partition_table=on -outdev "$ISO" 2>/dev/null
+exit 0
+EOF
+    chmod +x /usr/bin/isohybrid
+fi
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 lb build noauto "${@}" 2>&1 | tee build.log
