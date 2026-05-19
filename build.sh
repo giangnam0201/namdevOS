@@ -272,12 +272,12 @@ run_build() {
     # Configure live-build
     lb config
 
-    # Run the build
+    # Run the build (creates a plain ISO, no isohybrid needed)
     lb build
 
     popd > /dev/null
 
-    # Move the output ISO
+    # Move the output ISO and make it hybrid-bootable (USB)
     mkdir -p "${OUTPUT_DIR}"
     local iso_file
     iso_file=$(find "${BUILD_DIR}" -maxdepth 1 -name "*.iso" | head -1)
@@ -285,6 +285,13 @@ run_build() {
     if [[ -n "$iso_file" ]]; then
         local output_name="${DISTRO_NAME}-${DISTRO_VERSION}-amd64.iso"
         mv "$iso_file" "${OUTPUT_DIR}/${output_name}"
+
+        # Make the ISO hybrid-bootable (works from USB) using xorriso
+        log_info "Making ISO hybrid-bootable with xorriso..."
+        xorriso -indev "${OUTPUT_DIR}/${output_name}" \
+            -boot_image any partition_table=on \
+            -outdev "${OUTPUT_DIR}/${output_name}" 2>/dev/null || true
+
         log_success "ISO built successfully: ${OUTPUT_DIR}/${output_name}"
 
         local iso_size
@@ -408,39 +415,6 @@ setup_build_directory
 setup_package_lists
 setup_hooks
 setup_includes
-
-# Force-install a working isohybrid EVERYWHERE it might be needed.
-# live-build's binary.sh calls 'isohybrid' but on Ubuntu 24.04 it doesn't exist
-# or the Perl version is broken. We install it at multiple locations.
-log_info "Installing isohybrid wrapper..."
-cat > /tmp/isohybrid_wrapper << 'HYBRIDWRAPPER'
-#!/bin/sh
-# isohybrid wrapper for namdevOS build
-ISO=""
-for arg in "$@"; do
-    case "$arg" in
-        -*) ;;
-        *) ISO="$arg" ;;
-    esac
-done
-[ -z "$ISO" ] && exit 0
-[ ! -f "$ISO" ] && exit 0
-if command -v xorriso >/dev/null 2>&1; then
-    xorriso -indev "$ISO" -boot_image any partition_table=on -outdev "$ISO" 2>/dev/null
-fi
-exit 0
-HYBRIDWRAPPER
-chmod +x /tmp/isohybrid_wrapper
-# Install to every possible location
-cp /tmp/isohybrid_wrapper /usr/bin/isohybrid
-cp /tmp/isohybrid_wrapper /usr/sbin/isohybrid
-cp /tmp/isohybrid_wrapper /usr/local/bin/isohybrid
-cp /tmp/isohybrid_wrapper /bin/isohybrid 2>/dev/null || true
-chmod +x /usr/bin/isohybrid /usr/sbin/isohybrid /usr/local/bin/isohybrid
-# Also make sure PATH includes everything
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
-rm -f /tmp/isohybrid_wrapper
-log_success "isohybrid installed to /usr/bin, /usr/sbin, /usr/local/bin"
 
 run_build
 
