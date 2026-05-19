@@ -86,32 +86,13 @@ patch_syslinux() {
         cat > "$script" << 'SYSLINUX_REPLACEMENT'
 #!/bin/sh
 # namdevOS replacement for lb_binary_syslinux
-# Sets up basic isolinux boot WITHOUT theme handling (themes don't exist in Ubuntu 24.04)
+# Sets up basic isolinux boot WITHOUT theme handling
 
 set -e
 
-# Source live-build functions
-if [ -e /usr/share/live/build/functions ]; then
-    . /usr/share/live/build/functions
-elif [ -e /usr/lib/live/build/functions ]; then
-    . /usr/lib/live/build/functions
-fi
+echo "P: Begin installing syslinux..."
 
-# Only run if syslinux/isolinux is configured
-case "${LB_BOOTLOADER}" in
-    syslinux|"")
-        ;;
-    *)
-        exit 0
-        ;;
-esac
-
-Echo_message "Begin installing syslinux..."
-
-# Ensure we're in the right directory
-cd "${LB_BUILD_DIRECTORY:-binary}"  2>/dev/null || cd binary 2>/dev/null || true
-
-# Create isolinux directory
+# Create isolinux directory in binary/
 mkdir -p binary/isolinux
 
 # Copy isolinux.bin
@@ -167,17 +148,13 @@ LABEL live-safe
     MENU LABEL Start namdevOS (Safe Mode)
     KERNEL /casper/vmlinuz
     APPEND initrd=/casper/initrd boot=casper xforcevesa nomodeset quiet splash ---
-
-LABEL memtest
-    MENU LABEL Memory Test
-    LINUX /install/memtest86+x64.bin
 ISOCFG
 fi
 
 # Create boot.cat marker
 touch binary/isolinux/boot.cat 2>/dev/null || true
 
-Echo_message "Syslinux installed (namdevOS minimal config)"
+echo "P: Syslinux installed (namdevOS minimal config)"
 SYSLINUX_REPLACEMENT
 
         chmod +x "$script"
