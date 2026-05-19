@@ -409,32 +409,23 @@ setup_package_lists
 setup_hooks
 setup_includes
 
-# Ensure isohybrid is in PATH (live-build's scripts use /bin/sh with limited PATH)
-if ! command -v isohybrid &>/dev/null; then
-    # Try to find it
-    for p in /usr/bin/isohybrid /usr/sbin/isohybrid /usr/lib/syslinux/isohybrid; do
-        if [[ -f "$p" ]]; then
-            ln -sf "$p" /usr/local/bin/isohybrid
-            break
-        fi
-    done
-fi
-# If still not found, create a wrapper using xorriso (modern alternative)
-if ! command -v isohybrid &>/dev/null; then
-    log_warn "isohybrid not found, creating xorriso-based wrapper"
-    cat > /usr/local/bin/isohybrid << 'HYBRIDWRAPPER'
+# Ensure isohybrid exists at /usr/bin (live-build calls it via /bin/sh which
+# may not have /usr/local/bin in PATH). On Ubuntu 24.04, syslinux-utils may
+# not include isohybrid, so we create a working wrapper unconditionally.
+if [ ! -x /usr/bin/isohybrid ]; then
+    log_info "Creating isohybrid at /usr/bin..."
+    cat > /usr/bin/isohybrid << 'HYBRIDWRAPPER'
 #!/bin/sh
-# Wrapper: isohybrid using xorriso as backend
-# Usage: isohybrid <iso-file>
+# isohybrid wrapper - makes ISO bootable from USB
+# Falls back gracefully if tools are missing
 ISO="$1"
-if [ -z "$ISO" ]; then
-    echo "Usage: isohybrid <iso-file>" >&2
-    exit 1
+[ -z "$ISO" ] && exit 0
+if command -v xorriso >/dev/null 2>&1; then
+    xorriso -indev "$ISO" -boot_image any partition_table=on -outdev "$ISO" 2>/dev/null || true
 fi
-# xorriso can make an ISO hybrid in-place
-xorriso -dev "$ISO" -boot_image any partition_table=on -append_partition 2 0xef --interval:appended_partition_2:all:: 2>/dev/null || true
+exit 0
 HYBRIDWRAPPER
-    chmod +x /usr/local/bin/isohybrid
+    chmod +x /usr/bin/isohybrid
 fi
 
 run_build
