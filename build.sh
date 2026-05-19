@@ -68,19 +68,15 @@ patch_syslinux() {
     script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
     [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live 2>/dev/null -name lb_binary_syslinux | head -1)
     if [[ -n "$script" && -f "$script" ]]; then
-        sed -i 's/.*gfxboot-theme-ubuntu.*/true/' "$script"
-        log_success "lb_binary_syslinux patched (gfxboot)"
+        sed -i \
+            -e 's/.*syslinux-themes-.*/true/' \
+            -e 's/.*gfxboot-theme-ubuntu.*/true/' \
+            -e 's|.*cp.*themes.*|true|' \
+            "$script"
+        log_success "lb_binary_syslinux patched (themes + cp)"
     else
-        log_warn "lb_binary_syslinux not found — skipping gfxboot patch"
+        log_warn "lb_binary_syslinux not found — skipping patch"
     fi
-
-    # The install call contains the literal text "syslinux-themes-" followed by
-    # a variable, so match the prefix. gfxboot-theme-ubuntu is also literal.
-    sed -i \
-        -e 's/.*syslinux-themes-.*/true/' \
-        -e 's/.*gfxboot-theme-ubuntu.*/true/' \
-        "$script"
-    log_success "lb_binary_syslinux patched (themes)"
 }
 
 install_dependencies() {

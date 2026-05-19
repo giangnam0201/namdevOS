@@ -79,9 +79,11 @@ jobs:
             sudo sed -i \
               -e 's/.*syslinux-themes-.*/true/' \
               -e 's/.*gfxboot-theme-ubuntu.*/true/' \
+              -e 's|.*cp.*themes.*|true|' \
               "$SCRIPT"
             echo "Patched: $SCRIPT"
-            grep -n 'syslinux-themes-\|gfxboot-theme' "$SCRIPT" || echo "(no dead theme lines remaining)"
+            grep -n 'syslinux-themes-\|gfxboot-theme\|cp.*themes' "$SCRIPT" \
+              || echo "(no dead theme lines remaining)"
           else
             echo "lb_binary_syslinux not found — skipping patch"
           fi
