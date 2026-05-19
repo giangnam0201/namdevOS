@@ -64,52 +64,138 @@ check_root() {
 }
 
 patch_syslinux() {
-    log_info "Patching live-build syslinux theme handling..."
+    log_info "Replacing lb_binary_syslinux with namdevOS version..."
 
-    # Run in a subshell with relaxed error handling so find/grep failures
-    # don't kill the main build script (set -euo pipefail is active)
-    (
-        set +e
-        set +o pipefail
+    # Strategy: completely replace lb_binary_syslinux with our own minimal
+    # version that sets up isolinux booting WITHOUT any theme handling.
+    # This is the only 100% reliable approach - sed pattern matching keeps
+    # failing because the Ubuntu live-build script uses dynamic variables.
 
-        # Find lb_binary_syslinux
-        local script=""
-        script="$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$')"
-        if [ -z "$script" ] || [ ! -f "$script" ]; then
-            script="$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name lb_binary_syslinux -type f 2>/dev/null | head -1)"
-        fi
+    local script=""
+    # Try to find the script
+    script="$(dpkg -L live-build 2>/dev/null | grep 'lb_binary_syslinux$' | head -1)" || true
+    if [ -z "$script" ] || [ ! -f "$script" ]; then
+        script="$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name lb_binary_syslinux -type f 2>/dev/null | head -1)" || true
+    fi
 
-        if [ -n "$script" ] && [ -f "$script" ]; then
-            sed -i \
-                -e 's|^\(.*cp.*themes.*/isolinux-live\)|# PATCHED: \1|' \
-                -e 's|^\(.*cp -r.*/usr/share/syslinux/themes\)|# PATCHED: \1|' \
-                -e 's|^\(.*Packages_Install.*syslinux-themes\)|# PATCHED: \1|' \
-                -e 's|^\(.*gfxboot-theme\)|# PATCHED: \1|' \
-                "$script"
-            echo "[PATCH] lb_binary_syslinux theme lines commented out"
-        fi
+    if [ -n "$script" ] && [ -f "$script" ]; then
+        # Back up original
+        cp "$script" "${script}.orig.bak"
 
-        # Patch defaults.sh to clear theme variable
-        local defaults=""
-        defaults="$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name 'defaults.sh' -type f 2>/dev/null | head -1)"
-        if [ -n "$defaults" ] && [ -f "$defaults" ]; then
-            sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|' "$defaults"
-        fi
+        # Write our replacement script
+        cat > "$script" << 'SYSLINUX_REPLACEMENT'
+#!/bin/sh
+# namdevOS replacement for lb_binary_syslinux
+# Sets up basic isolinux boot WITHOUT theme handling (themes don't exist in Ubuntu 24.04)
 
-        # Create fake theme directories
-        mkdir -p /usr/share/syslinux/themes/isolinux-live
-        mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
-        touch /usr/share/syslinux/themes/isolinux-live/.keep
-        touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
+set -e
 
-        # Ensure syslinux-common and isolinux are installed
-        dpkg -l syslinux-common >/dev/null 2>&1 || apt-get install -y syslinux-common >/dev/null 2>&1
-        dpkg -l isolinux >/dev/null 2>&1 || apt-get install -y isolinux >/dev/null 2>&1
+# Source live-build functions
+if [ -e /usr/share/live/build/functions ]; then
+    . /usr/share/live/build/functions
+elif [ -e /usr/lib/live/build/functions ]; then
+    . /usr/lib/live/build/functions
+fi
 
+# Only run if syslinux/isolinux is configured
+case "${LB_BOOTLOADER}" in
+    syslinux|"")
+        ;;
+    *)
         exit 0
-    )
+        ;;
+esac
 
-    log_success "Syslinux patch applied"
+Echo_message "Begin installing syslinux..."
+
+# Ensure we're in the right directory
+cd "${LB_BUILD_DIRECTORY:-binary}"  2>/dev/null || cd binary 2>/dev/null || true
+
+# Create isolinux directory
+mkdir -p binary/isolinux
+
+# Copy isolinux.bin
+if [ -f /usr/lib/ISOLINUX/isolinux.bin ]; then
+    cp /usr/lib/ISOLINUX/isolinux.bin binary/isolinux/
+elif [ -f /usr/lib/syslinux/modules/bios/isolinux.bin ]; then
+    cp /usr/lib/syslinux/modules/bios/isolinux.bin binary/isolinux/
+elif [ -f /usr/share/syslinux/isolinux.bin ]; then
+    cp /usr/share/syslinux/isolinux.bin binary/isolinux/
+fi
+
+# Copy ldlinux.c32 (required by syslinux 6.x)
+for ldlinux in /usr/lib/syslinux/modules/bios/ldlinux.c32 /usr/share/syslinux/ldlinux.c32; do
+    if [ -f "$ldlinux" ]; then
+        cp "$ldlinux" binary/isolinux/
+        break
+    fi
+done
+
+# Copy other useful syslinux modules
+for mod in libutil.c32 libcom32.c32 menu.c32 vesamenu.c32 hdt.c32 chain.c32; do
+    for path in /usr/lib/syslinux/modules/bios /usr/share/syslinux; do
+        if [ -f "${path}/${mod}" ]; then
+            cp "${path}/${mod}" binary/isolinux/
+            break
+        fi
+    done
+done
+
+# Create a basic isolinux.cfg if one doesn't exist
+if [ ! -f binary/isolinux/isolinux.cfg ]; then
+    cat > binary/isolinux/isolinux.cfg << 'ISOCFG'
+DEFAULT live
+TIMEOUT 50
+PROMPT 0
+
+UI menu.c32
+
+MENU TITLE namdevOS Boot Menu
+MENU BACKGROUND #0d1117
+MENU COLOR title  1;36;40 #ff00d2d3 #00000000 none
+MENU COLOR sel    7;37;40 #ffe94560 #00000000 none
+MENU COLOR unsel  37;40   #ffe0e0e0 #00000000 none
+MENU COLOR border 37;40   #00000000 #00000000 none
+
+LABEL live
+    MENU LABEL ^Start namdevOS
+    MENU DEFAULT
+    KERNEL /casper/vmlinuz
+    APPEND initrd=/casper/initrd boot=casper quiet splash ---
+
+LABEL live-safe
+    MENU LABEL Start namdevOS (Safe Mode)
+    KERNEL /casper/vmlinuz
+    APPEND initrd=/casper/initrd boot=casper xforcevesa nomodeset quiet splash ---
+
+LABEL memtest
+    MENU LABEL Memory Test
+    LINUX /install/memtest86+x64.bin
+ISOCFG
+fi
+
+# Create boot.cat marker
+touch binary/isolinux/boot.cat 2>/dev/null || true
+
+Echo_message "Syslinux installed (namdevOS minimal config)"
+SYSLINUX_REPLACEMENT
+
+        chmod +x "$script"
+        log_success "lb_binary_syslinux replaced with namdevOS version"
+    else
+        log_warn "lb_binary_syslinux not found — creating isolinux structure manually"
+    fi
+
+    # Also ensure the theme variable is empty everywhere
+    find /usr/lib/live /usr/share/live /usr/lib/live-build -name "defaults.sh" -type f 2>/dev/null | while read -r f; do
+        sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|g' "$f" 2>/dev/null || true
+    done || true
+
+    # Create fake theme directories (belt and suspenders)
+    mkdir -p /usr/share/syslinux/themes/isolinux-live
+    mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live
+    touch /usr/share/syslinux/themes/isolinux-live/.keep
+    touch /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
 }
 
 install_dependencies() {

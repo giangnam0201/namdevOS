@@ -34,26 +34,6 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Pre-patch live-build syslinux: comment out theme copy lines (not a full no-op,
-# because lb_binary_syslinux still needs to create the isolinux/ boot directory)
-RUN SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true) && \
-    if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then \
-        sed -i \
-            -e 's|^\(.*cp.*themes.*/isolinux-live\)|# PATCHED: \1|' \
-            -e 's|^\(.*cp -r.*/usr/share/syslinux/themes\)|# PATCHED: \1|' \
-            -e 's|^\(.*Packages_Install.*syslinux-themes\)|# PATCHED: \1|' \
-            -e 's|^\(.*gfxboot-theme\)|# PATCHED: \1|' \
-            "$SCRIPT"; \
-    fi && \
-    DEFAULTS=$(find /usr/lib/live /usr/share/live /usr/lib/live-build -name "defaults.sh" -type f 2>/dev/null | head -1) && \
-    if [ -n "$DEFAULTS" ] && [ -f "$DEFAULTS" ]; then \
-        sed -i 's|LB_SYSLINUX_THEME=.*|LB_SYSLINUX_THEME=""|' "$DEFAULTS"; \
-    fi && \
-    mkdir -p /usr/share/syslinux/themes/isolinux-live \
-             /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live && \
-    touch /usr/share/syslinux/themes/isolinux-live/.keep \
-          /usr/share/syslinux/themes/ubuntu-oneiric/isolinux-live/.keep
-
 # Set working directory
 WORKDIR /build
 
