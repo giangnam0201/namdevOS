@@ -1,14 +1,7 @@
-# Find where the squashfs actually is
-SQFS=$(find /cdrom /run/live /media -name "filesystem.squashfs" 2>/dev/null | head -1)
-echo "Found squashfs at: $SQFS"
+sudo apt install -y calamares
 
-# Create the path Calamares expects
-sudo mkdir -p /run/live/medium/live
-sudo ln -sf "$SQFS" /run/live/medium/live/filesystem.squashfs
+sudo apt install -y calamares-extensions
 
-# Also create symlink at other common paths
-sudo mkdir -p /cdrom/casper
-sudo ln -sf "$SQFS" /cdrom/casper/filesystem.squashfs
+apt list --installed 2>/dev/null | grep calama
 
-# Re-run calamares
-sudo calamares
+sudo apt install -y calamares && sudo calamares

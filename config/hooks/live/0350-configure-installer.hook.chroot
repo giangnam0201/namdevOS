@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# Configure Calamares installer for namdevOS
+# Runs after packages are installed to set up the installer properly
+#
+
+set -euo pipefail
+
+echo "Configuring Calamares installer..."
+
+# Remove the Debian settings package if it was pulled in as a dependency
+apt-get remove -y calamares-settings-debian 2>/dev/null || true
+
+# Verify calamares is actually installed with its modules
+if ! command -v calamares &>/dev/null; then
+    echo "WARNING: Calamares not installed, skipping installer config"
+    exit 0
+fi
+
+# Check that the unpackfs module exists
+MODDIR=""
+for d in /usr/lib/x86_64-linux-gnu/calamares/modules /usr/lib/calamares/modules; do
+    if [[ -d "$d" ]]; then
+        MODDIR="$d"
+        break
+    fi
+done
+
+if [[ -z "$MODDIR" ]]; then
+    echo "WARNING: Calamares modules directory not found"
+    echo "Available calamares files:"
+    dpkg -L calamares 2>/dev/null | head -30
+fi
+
+# Ensure our configs are in place at /etc/calamares
+# (they were staged by setup_includes to /etc/calamares already)
+if [[ ! -f /etc/calamares/settings.conf ]]; then
+    echo "WARNING: /etc/calamares/settings.conf missing"
+fi
+
+# Create the "Install namdevOS" desktop entry
+cat > /usr/share/applications/namdevos-installer.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=Install namdevOS
+GenericName=System Installer
+Comment=Install namdevOS to your computer
+Exec=sudo -E calamares
+Icon=calamares
+Terminal=false
+Categories=System;
+Keywords=install;system;calamares;
+EOF
+
+# Put on desktop for live session
+mkdir -p /etc/skel/Desktop
+cp /usr/share/applications/namdevos-installer.desktop /etc/skel/Desktop/
+chmod +x /etc/skel/Desktop/namdevos-installer.desktop
+
+# Remove any Debian-branded installer shortcuts
+rm -f /usr/share/applications/calamares-install-debian.desktop 2>/dev/null || true
+rm -f /usr/share/applications/install-debian.desktop 2>/dev/null || true
+
+# Create a polkit rule so calamares can run without password prompt in live session
+mkdir -p /etc/polkit-1/localauthority/50-local.d
+cat > /etc/polkit-1/localauthority/50-local.d/namdevos-calamares.pkla << 'POLKIT'
+[Allow Calamares in live session]
+Identity=unix-user:*
+Action=org.freedesktop.policykit.exec
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
+POLKIT
+
+# Also create a sudoers rule for calamares
+cat > /etc/sudoers.d/calamares << 'SUDOERS'
+# Allow live session user to run calamares without password
+%sudo ALL=(ALL) NOPASSWD: /usr/bin/calamares
+%sudo ALL=(ALL) NOPASSWD: /usr/sbin/calamares
+SUDOERS
+chmod 440 /etc/sudoers.d/calamares
+
+echo "Calamares installer configured"

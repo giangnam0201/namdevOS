@@ -1,5 +1,6 @@
 # namdevOS Installer Packages
-# Calamares graphical installer
+# Calamares graphical installer (Ubuntu-compatible)
+# NOTE: Do NOT include calamares-settings-debian - it's for Debian only
+#       and conflicts with Ubuntu/casper-based systems.
 
 calamares
-calamares-settings-debian
