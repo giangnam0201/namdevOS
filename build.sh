@@ -77,16 +77,21 @@ patch_syslinux() {
     # syslinux-themes-ubuntu-oneiric is assembled from a config variable at
     # runtime, not a literal in the script; pre-install a dummy deb so apt-get
     # sees the package as already satisfied and skips the network fetch.
-    local tmpdir
-    tmpdir=$(mktemp -d)
-    mkdir -p "${tmpdir}/DEBIAN"
-    printf 'Package: syslinux-themes-ubuntu-oneiric\nVersion: 99.0\nArchitecture: all\nMaintainer: CI <ci@localhost>\nDescription: Dummy package to satisfy live-build\n' \
-        > "${tmpdir}/DEBIAN/control"
-    dpkg-deb --build "${tmpdir}" /tmp/syslinux-themes-ubuntu-oneiric_99.0_all.deb
-    dpkg -i /tmp/syslinux-themes-ubuntu-oneiric_99.0_all.deb
+    if dpkg -l syslinux-themes-ubuntu-oneiric &>/dev/null 2>&1; then
+        log_success "syslinux-themes-ubuntu-oneiric already satisfied"
+    else
+        local pkgdir debdir
+        pkgdir=$(mktemp -d)
+        debdir=$(mktemp -d)
+        mkdir -p "${pkgdir}/DEBIAN"
+        printf 'Package: syslinux-themes-ubuntu-oneiric\nVersion: 99.0\nArchitecture: all\nMaintainer: CI <ci@localhost>\nDescription: Dummy package to satisfy live-build\n' \
+            > "${pkgdir}/DEBIAN/control"
+        dpkg-deb --build "${pkgdir}" "${debdir}/syslinux-themes-ubuntu-oneiric_99.0_all.deb"
+        dpkg -i "${debdir}/syslinux-themes-ubuntu-oneiric_99.0_all.deb"
+        rm -rf "${pkgdir}" "${debdir}"
+        log_success "dummy syslinux-themes-ubuntu-oneiric installed"
+    fi
     mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric
-    rm -rf "${tmpdir}"
-    log_success "dummy syslinux-themes-ubuntu-oneiric installed"
 }
 
 install_dependencies() {
