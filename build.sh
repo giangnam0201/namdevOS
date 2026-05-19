@@ -68,14 +68,25 @@ patch_syslinux() {
     script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
     [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live 2>/dev/null -name lb_binary_syslinux | head -1)
     if [[ -n "$script" && -f "$script" ]]; then
-        sed -i \
-            -e 's/.*ubuntu-oneiric.*/true/' \
-            -e 's/.*gfxboot-theme-ubuntu.*/true/' \
-            "$script"
-        log_success "lb_binary_syslinux patched"
+        sed -i 's/.*gfxboot-theme-ubuntu.*/true/' "$script"
+        log_success "lb_binary_syslinux patched (gfxboot)"
     else
-        log_warn "lb_binary_syslinux not found — skipping patch"
+        log_warn "lb_binary_syslinux not found — skipping gfxboot patch"
     fi
+
+    # syslinux-themes-ubuntu-oneiric is assembled from a config variable at
+    # runtime, not a literal in the script; pre-install a dummy deb so apt-get
+    # sees the package as already satisfied and skips the network fetch.
+    local tmpdir
+    tmpdir=$(mktemp -d)
+    mkdir -p "${tmpdir}/DEBIAN"
+    printf 'Package: syslinux-themes-ubuntu-oneiric\nVersion: 99.0\nArchitecture: all\nMaintainer: CI <ci@localhost>\nDescription: Dummy package to satisfy live-build\n' \
+        > "${tmpdir}/DEBIAN/control"
+    dpkg-deb --build "${tmpdir}" /tmp/syslinux-themes-ubuntu-oneiric_99.0_all.deb
+    dpkg -i /tmp/syslinux-themes-ubuntu-oneiric_99.0_all.deb
+    mkdir -p /usr/share/syslinux/themes/ubuntu-oneiric
+    rm -rf "${tmpdir}"
+    log_success "dummy syslinux-themes-ubuntu-oneiric installed"
 }
 
 install_dependencies() {
