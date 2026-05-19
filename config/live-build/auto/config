@@ -15,7 +15,6 @@ lb config noauto \
     --mirror-chroot-security "http://security.ubuntu.com/ubuntu/" \
     --mirror-binary "http://archive.ubuntu.com/ubuntu/" \
     --mirror-binary-security "http://security.ubuntu.com/ubuntu/" \
-    --bootloaders "grub-efi" \
     --bootappend-live "boot=casper quiet splash" \
     --debian-installer false \
     --linux-flavours "generic" \

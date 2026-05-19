@@ -63,6 +63,18 @@ check_root() {
     fi
 }
 
+stub_syslinux() {
+    local script
+    script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
+    [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live 2>/dev/null -name "lb_binary_syslinux" | head -1)
+    if [[ -n "$script" && -f "$script" ]]; then
+        printf '#!/bin/bash\nexit 0\n' > "$script"
+        log_success "lb_binary_syslinux stubbed"
+    else
+        log_warn "lb_binary_syslinux not found, skipping stub"
+    fi
+}
+
 install_dependencies() {
     local deps=(live-build debootstrap squashfs-tools xorriso grub-efi-amd64 grub-efi-amd64-signed shim-signed)
     local missing=()
@@ -291,6 +303,7 @@ if [[ "$CLEAN" == "true" ]]; then
 fi
 
 install_dependencies
+stub_syslinux
 setup_build_directory
 setup_package_lists
 setup_hooks
