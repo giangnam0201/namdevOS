@@ -6,7 +6,7 @@
 set -e
 
 lb config noauto \
-    --binary-images iso \
+    --binary-images iso-hybrid \
     --architectures amd64 \
     --distribution noble \
     --archive-areas "main restricted universe multiverse" \

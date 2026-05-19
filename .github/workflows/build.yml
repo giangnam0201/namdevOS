@@ -59,9 +59,26 @@ jobs:
             debootstrap \
             squashfs-tools \
             xorriso \
+            isolinux \
+            syslinux-utils \
             grub-efi-amd64 \
             grub-efi-amd64-signed \
             shim-signed
+
+      - name: Patch lb_binary_syslinux
+        run: |
+          SCRIPT=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
+          [ -z "$SCRIPT" ] && SCRIPT=$(find /usr/lib/live /usr/share/live -name lb_binary_syslinux 2>/dev/null | head -1)
+          if [ -n "$SCRIPT" ] && [ -f "$SCRIPT" ]; then
+            sudo sed -i \
+              -e 's/.*syslinux-themes-ubuntu-oneiric.*/true/' \
+              -e 's/.*gfxboot-theme-ubuntu.*/true/' \
+              "$SCRIPT"
+            echo "Patched: $SCRIPT"
+            grep -n 'oneiric\|gfxboot' "$SCRIPT" || echo "(no dead packages remaining)"
+          else
+            echo "lb_binary_syslinux not found — skipping patch"
+          fi
 
       - name: Build ISO
         run: sudo bash build.sh

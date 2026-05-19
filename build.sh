@@ -63,8 +63,23 @@ check_root() {
     fi
 }
 
+patch_syslinux() {
+    local script
+    script=$(dpkg -L live-build 2>/dev/null | grep -m1 'lb_binary_syslinux$' || true)
+    [[ -z "$script" ]] && script=$(find /usr/lib/live /usr/share/live 2>/dev/null -name lb_binary_syslinux | head -1)
+    if [[ -n "$script" && -f "$script" ]]; then
+        sed -i \
+            -e 's/.*syslinux-themes-ubuntu-oneiric.*/true/' \
+            -e 's/.*gfxboot-theme-ubuntu.*/true/' \
+            "$script"
+        log_success "lb_binary_syslinux patched"
+    else
+        log_warn "lb_binary_syslinux not found — skipping patch"
+    fi
+}
+
 install_dependencies() {
-    local deps=(live-build debootstrap squashfs-tools xorriso grub-efi-amd64 grub-efi-amd64-signed shim-signed)
+    local deps=(live-build debootstrap squashfs-tools xorriso isolinux syslinux-utils grub-efi-amd64 grub-efi-amd64-signed shim-signed)
     local missing=()
 
     for dep in "${deps[@]}"; do
@@ -291,6 +306,7 @@ if [[ "$CLEAN" == "true" ]]; then
 fi
 
 install_dependencies
+patch_syslinux
 setup_build_directory
 setup_package_lists
 setup_hooks
